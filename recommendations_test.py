@@ -85,6 +85,22 @@ class TopMatchesTest(unittest.TestCase):
     m = recommendations.topMatches(self.data, 'Kerstin', n=2*len(self.data))
     self.assertEquals(len(self.data) - 1, len(m))
 
+class GetRecommendationsTest(unittest.TestCase):
+  def setUp(self):
+    self.data = {
+        'Nico': { 'Python': 4.5, 'Ruby': 3.0, 'C++': 3.4, 'Java': 2.5 },
+        'Yann': { 'Python': 3.0, 'Ruby': 4.5, 'C++': 3.4, 'Java': 1.5,
+                  'Mathematica': 3.2 },
+        'Josh': { 'Python': 0.5, 'Ruby': 0.0, 'C++': 1.0, 'Java': 5.0,
+                  'Patterns': 5.0 },
+        'Kerstin': { 'Python': 0.1, 'Chocolate': 5.0 },
+        }
+
+  def testBasics(self):
+    r = recommendations.getRecommendations(self.data, 'Nico',
+        similarity=recommendations.sim_distance)
+    print r
+
 
 if __name__ == '__main__':
   unittest.main()
