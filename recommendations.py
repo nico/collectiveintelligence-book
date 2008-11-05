@@ -1,5 +1,8 @@
 from math import sqrt
 
+# prefs is a map from people to a map from things to scores
+
+
 def sim_distance(prefs, person1, person2):
   # get common items
   ci = {}
@@ -36,3 +39,13 @@ def sim_pearson(prefs, person1, person2):
     else: return 0
 
   return num/den
+
+
+def topMatches(prefs, person, n=5, similarity=sim_pearson):
+  """Given a map from persons to personal preferences, returns the top n
+  persons similar to a given person."""
+
+  scores = [(similarity(prefs, person, other), other)
+      for other in prefs if other != person]
+  scores.sort(reverse=True)
+  return scores[0:n]

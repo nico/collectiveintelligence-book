@@ -51,6 +51,40 @@ class SimPearsonTestCase(DistanceTestCase, unittest.TestCase):
     self.assertAlmostEquals(1, self.metric(self.prefs, 'Nico', 'Yann'))
 
 
+class TopMatchesTest(unittest.TestCase):
+  def setUp(self):
+    self.data = {
+        'Nico': { 'Python': 4.5, 'Ruby': 3.0, 'C++': 3.4, 'Java': 2.5 },
+        'Yann': { 'Python': 3.0, 'Ruby': 4.5, 'C++': 3.4, 'Java': 1.5 },
+        'Josh': { 'Python': 0.5, 'Ruby': 0.0, 'C++': 1.0, 'Java': 5.0 },
+        'Kerstin': { 'Chocolate': 5.0 },
+        }
+
+  def testBasics(self):
+    scores = { 'Yann': 3, 'Kerstin': 2, 'Josh': 1 }
+    def stubDistance(prefs, p1, p2):
+      self.assertEquals(self.data, prefs)
+      if p1 == 'Nico': return scores[p2]
+      else: return scores[p1]
+    m = recommendations.topMatches(self.data, 'Nico', similarity=stubDistance)
+    self.assertEquals([(3, 'Yann'), (2, 'Kerstin'), (1, 'Josh')], m)
+
+  def testNormalWithPearson(self):
+    m = recommendations.topMatches(self.data, 'Nico',
+        similarity=recommendations.sim_pearson)
+    # With pearson, disagreement is worse than no common ground
+    self.assertEquals(['Yann', 'Kerstin', 'Josh'], [n for (s,n) in m])
+
+  def testNormalWithDistance(self):
+    m = recommendations.topMatches(self.data, 'Nico',
+        similarity=recommendations.sim_distance)
+    # With distance, disagreement is closer than no common ground
+    self.assertEquals(['Yann', 'Josh', 'Kerstin'], [n for (s,n) in m])
+
+  def testNLargetThanCount(self):
+    m = recommendations.topMatches(self.data, 'Kerstin', n=2*len(self.data))
+    self.assertEquals(len(self.data) - 1, len(m))
+
 
 if __name__ == '__main__':
   unittest.main()
