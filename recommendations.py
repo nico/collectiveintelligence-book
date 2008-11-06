@@ -73,6 +73,7 @@ def getRecommendations(prefs, person, similarity=sim_pearson):
   rankings = [(total/simSums[item], item) for item,total in totals.items()]
   return sorted(rankings, reverse=True)
 
+
 def transformPrefs(prefs):
   """Use this to transform a map from persons to rated things to a map from
   things to persons that describes how much a thing is liked by a person. Use
@@ -85,3 +86,22 @@ def transformPrefs(prefs):
       r[item][person] = prefs[person][item]
   return r
 
+
+def calculateSimilarItems(prefs, n=10):
+  """Item-based collaborative filtering instead of user-based collaborative
+  filtering as done before. This precomputes for each item the `n` most similar
+  items. Items are considered similar if they are liked by the same set of
+  people (roughly)."""
+  result = {}
+
+  # Invert preference matrix to be item-centric
+  itemPrefs = transformPrefs(prefs)
+  c = 0
+  for item in itemPrefs:
+    # Status updates for large datasets
+    c += 1
+    if c % 100 == 0: print '%d / %d' % (c, len(itemPrefs))
+    # Find the items most similar to current one
+    scores = topMatches(itemPrefs, item, n=n, similarity=sim_distance)
+    result[item] = scores
+  return result
