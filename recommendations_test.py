@@ -90,7 +90,7 @@ class GetRecommendationsTest(unittest.TestCase):
     self.data = {
         'Nico': { 'Python': 4.5, 'Ruby': 3.0, 'C++': 3.4, 'Java': 2.5 },
         'Yann': { 'Python': 3.0, 'Ruby': 4.5, 'C++': 3.4, 'Java': 1.5,
-                  'Mathematica': 3.2 },
+                  'Mathematica': 3.5, 'Chocolate': 2.0, 'Patterns': 2.0 },
         'Josh': { 'Python': 0.5, 'Ruby': 0.0, 'C++': 1.0, 'Java': 5.0,
                   'Patterns': 5.0 },
         'Kerstin': { 'Python': 0.1, 'Chocolate': 5.0 },
@@ -99,7 +99,12 @@ class GetRecommendationsTest(unittest.TestCase):
   def testBasics(self):
     r = recommendations.getRecommendations(self.data, 'Nico',
         similarity=recommendations.sim_distance)
-    print r
+    #print recommendations.sim_distance(self.data, 'Nico', 'Yann')
+    #print recommendations.sim_distance(self.data, 'Nico', 'Josh')
+    #print recommendations.sim_distance(self.data, 'Nico', 'Kerstin')
+    #print r
+    self.assertEquals(['Mathematica', 'Chocolate', 'Patterns'],
+        [n for s,n in r])
 
 
 if __name__ == '__main__':
