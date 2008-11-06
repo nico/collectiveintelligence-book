@@ -106,6 +106,32 @@ class GetRecommendationsTest(unittest.TestCase):
     self.assertEquals(['Mathematica', 'Chocolate', 'Patterns'],
         [n for s,n in r])
 
+class TransformPrefsTest(unittest.TestCase):
+  def testBasics(self):
+    d = { 'a': {'b': 0.4}, 'c': {'d': 0.5} }
+    expected = { 'b': {'a': 0.4}, 'd': {'c' : 0.5} }
+    self.assertEquals(expected, recommendations.transformPrefs(d))
+
+  def testEmptyPrefsList(self):
+    d = { 'a': {}, 'c': {'d': 0.5} }
+    expected = { 'd': {'c' : 0.5} }
+    self.assertEquals(expected, recommendations.transformPrefs(d))
+
+  def testOnlyEmptyPrefs(self):
+    d = { 'a': {} }
+    expected = { }
+    self.assertEquals(expected, recommendations.transformPrefs(d))
+
+  def testAllEmpty(self):
+    d = { }
+    expected = { }
+    self.assertEquals(expected, recommendations.transformPrefs(d))
+
+  def testCollect(self):
+    d = { 'a': {'z': 0.1}, 'b': {'z' : 0.2}, 'c': {'z': 0.3} }
+    expected = { 'z': {'a': 0.1, 'b': 0.2, 'c': 0.3} }
+    self.assertEquals(expected, recommendations.transformPrefs(d))
+
 
 if __name__ == '__main__':
   unittest.main()

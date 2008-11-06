@@ -73,3 +73,15 @@ def getRecommendations(prefs, person, similarity=sim_pearson):
   rankings = [(total/simSums[item], item) for item,total in totals.items()]
   return sorted(rankings, reverse=True)
 
+def transformPrefs(prefs):
+  """Use this to transform a map from persons to rated things to a map from
+  things to persons that describes how much a thing is liked by a person. Use
+  the result of this function as parameter to topMatches() to get items similar
+  to a given item."""
+
+  r = collections.defaultdict(dict)
+  for person in prefs:
+    for item in prefs[person]:
+      r[item][person] = prefs[person][item]
+  return r
+
