@@ -54,8 +54,8 @@ def topMatches(prefs, person, n=5, similarity=sim_pearson):
 
 
 def getRecommendations(prefs, person, similarity=sim_pearson):
-  totals = collections.defaultdict(int)
-  simSums = collections.defaultdict(int)
+  totals = collections.defaultdict(float)
+  simSums = collections.defaultdict(float)
   for other in prefs:
     if other == person: continue
 
@@ -87,11 +87,14 @@ def transformPrefs(prefs):
   return r
 
 
+
 def calculateSimilarItems(prefs, n=10):
   """Item-based collaborative filtering instead of user-based collaborative
   filtering as done before. This precomputes for each item the `n` most similar
   items. Items are considered similar if they are liked by the same set of
-  people (roughly)."""
+  people (roughly).
+  
+  This is useful because item sets are more stable than person sets."""
   result = {}
 
   # Invert preference matrix to be item-centric
@@ -105,3 +108,39 @@ def calculateSimilarItems(prefs, n=10):
     scores = topMatches(itemPrefs, item, n=n, similarity=sim_distance)
     result[item] = scores
   return result
+
+
+def getRecommendedItems(prefs, itemMatch, user):
+  """Recommends based on item similarity. Hence, this is faster than
+  getRecommendations(), which loops over all users."""
+  userRatings = prefs[user]
+  scores = collections.defaultdict(float)
+  totalSim = collections.defaultdict(float)
+
+  for item, rating in userRatings.items():
+    for similarity, item2 in itemMatch[item]:
+      #ignore of this user has already rated item2
+      if item2 in userRatings: continue
+
+      scores[item2] += similarity * rating
+      totalSim[item2] += similarity
+
+  # normalize scores
+  rankings = [(score/totalSim[item], item) for item,score in scores.items()]
+  return sorted(rankings, reverse=True)
+
+
+def sim_tanimoto(prefs, person1, person2):
+  ci = set([])
+  # get common items
+  for item in prefs[person1]:
+    if item in prefs[person2]:
+      ci.add(item)
+
+  if len(ci) == 0: return 0
+
+  a = sum([pow(prefs[person1][k], 2) for k in ci])
+  b = sum([pow(prefs[person2][k], 2) for k in ci])
+  c = sum([prefs[person1][k] * prefs[person2][k] for k in ci])
+
+  return c/(a + b - c)

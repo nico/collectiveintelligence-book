@@ -133,5 +133,24 @@ class TransformPrefsTest(unittest.TestCase):
     self.assertEquals(expected, recommendations.transformPrefs(d))
 
 
+class GetRecommendedItemsTest(unittest.TestCase):
+  def testBasics(self):
+    d = {'N': {'p': 1.0, 'j': 0.3}, 'Y':{'p': 0.8, 'j': 0.2, 'r':1.0} }
+    itemsim = recommendations.calculateSimilarItems(d)
+    r = recommendations.getRecommendedItems(d, itemsim, 'N')
+    self.assertEquals(1, len(r))
+    self.assertEquals('r', r[0][1])
+       
+
+class SimTanimotoTestCase(DistanceTestCase, unittest.TestCase):
+  def setUp(self):
+    self.metric = recommendations.sim_tanimoto
+    self.prefs = { 'Nico': {'h': 0.8, 'b':0.2}, 'Yann': {'h': 0.4, 'b':0.1}}
+
+  def testNormal(self):
+    expected = (0.32 + 0.02) / ((0.64 + 0.04) + (0.16 + 0.01) - (0.32 + 0.02))
+    self.assertAlmostEquals(expected, self.metric(self.prefs, 'Nico', 'Yann'))
+
+
 if __name__ == '__main__':
   unittest.main()
