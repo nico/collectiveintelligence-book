@@ -1,5 +1,6 @@
 from pydelicious import get_popular, get_userposts, get_urlposts
 
+import collections
 import time
 
 def initializeUserDict(tag, count=5):
@@ -13,8 +14,8 @@ def initializeUserDict(tag, count=5):
       user_dict[user] = {}
   return user_dict
 
-def fillItems(user_dict):
-  all_items = {}
+
+def fillAll(user_dict):
   # Find links posted by all users
   for user in user_dict:
     for i in range(3):
@@ -25,6 +26,14 @@ def fillItems(user_dict):
       except:
         print 'Failed user %s, retrying' % user
         time.sleep(4)
+    user_dict[user] = posts
+
+
+def fillItems(user_dict):
+  all_items = {}
+  for user in user_dict:
+    posts = user_dict[user]
+    user_dict[user] = {}
     for post in posts:
       url = post['href']
       user_dict[user][url] = 1.0
@@ -35,6 +44,21 @@ def fillItems(user_dict):
     for item in all_items:
       if item not in ratings:
         ratings[item] = 0.0
+
+
+def buildTagsList(user_dict):
+  """Gets a user list and returns a weighted tag-url map for posts by these
+  users."""
+  tag_map = collections.defaultdict(lambda: collections.defaultdict(float))
+  for user, posts in user_dict.iteritems():
+    for post in posts:
+      url = post['href']
+      tags = post['tags'].split()
+      for tag in tags:
+        tag_map[tag][url] += 1.0
+  return tag_map
+
+
 
 if __name__ == '__main__':
   # stupid little demo

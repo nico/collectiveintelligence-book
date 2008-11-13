@@ -139,8 +139,13 @@ def sim_tanimoto(prefs, person1, person2):
 
   if len(ci) == 0: return 0
 
+  # use only items in both sets for a and b
   a = sum([pow(prefs[person1][k], 2) for k in ci])
   b = sum([pow(prefs[person2][k], 2) for k in ci])
+
+  # use the full sets for a and b
+  #a = sum([s*s for s in prefs[person1].values()])
+  #b = sum([s*s for s in prefs[person2].values()])
   c = sum([prefs[person1][k] * prefs[person2][k] for k in ci])
 
   return c/(a + b - c)
