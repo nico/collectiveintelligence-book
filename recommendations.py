@@ -2,6 +2,8 @@ from math import sqrt
 
 import collections
 
+import clusters
+
 # prefs is a map from people to a map from things to scores
 
 
@@ -23,24 +25,9 @@ def sim_pearson(prefs, person1, person2):
   for item in prefs[person1]:
     if item in prefs[person2]: ci[item] = 1
 
-  n = len(ci)
-  if n == 0: return 0
-
-  sum1 = sum([prefs[person1][it] for it in ci])
-  sum2 = sum([prefs[person2][it] for it in ci])
-
-  sqSum1 = sum([pow(prefs[person1][it], 2) for it in ci])
-  sqSum2 = sum([pow(prefs[person2][it], 2) for it in ci])
-
-  pSum = sum([prefs[person1][it] * prefs[person2][it] for it in ci])
-
-  num = pSum - (sum1*sum2/n)
-  den = sqrt((sqSum1 - pow(sum1, 2)/n) * (sqSum2 - pow(sum2, 2)/n))
-  if den == 0:
-    if num == 0: return 1  # all points equal. or: just one common item.
-    else: return 0
-
-  return num/den
+  v1 = [prefs[person1][it] for it in ci]
+  v2 = [prefs[person2][it] for it in ci]
+  return clusters.pearson(v1, v2)
 
 
 def topMatches(prefs, person, n=5, similarity=sim_pearson):
