@@ -38,8 +38,12 @@ def pearson(v1, v2):
   num = pSum - (sum1*sum2/n)
   den = sqrt((sqSum1 - pow(sum1, 2)/n) * (sqSum2 - pow(sum2, 2)/n))
   if den == 0:
-    if num == 0: return 1  # all points equal. or: just one common item.
-    else: return 0
+    # It's not clear what to do here. It can happen when all components are
+    # equal (which means "very similar"), or if one of the vectors contains
+    # only zeroes, or if the two vectors contain only one element. In these
+    # cases, this function can't figure out how to "scale" its result. Cop
+    # out and simply return 0 for those cases.
+    return 0
 
   return num/den
 
@@ -56,3 +60,68 @@ class bicluster(object):
     self.right = right
     self.distance = distance
     self.id = id
+
+  def __eq__(self, b):
+    return (self.vec == b.vec
+        and self.left == b.left
+        and self.right == b.right
+        and self.distance == b.distance
+        and self.id == b.id)
+
+  # If we have __eq__, we better have __ne__ too
+  # so that `not (a == b) == a != b`
+  def __ne__(self, b):
+    return not (self == b)
+
+  # If we have __eq__, we better have __hash__ too
+  # so that `a == b => hash(a) == has(b)`. Since we don't need bicluster objects
+  # as dict keys, it's ok if this function fails loudly (instead of silently
+  # returning a wrong value, which is the defaul)
+  def __hash__(self):
+    raise NotImplementedError
+
+  def __str__(self):
+    return '%s %f %d (%s %s)' % (str(self.vec), self.distance, self.id,
+        self.left, self.right)
+
+
+def mergevecs(a, b):
+  return [(a[i] + b[i])/2.0 for i in range(len(a))]
+
+
+def hcluster(rows, distance=pearson_dist):
+  distances = {}
+  currentclustid = -1
+
+  # Clusters start off as just rows
+  clust = [bicluster(rows[i], id=i) for i in range(len(rows))]
+
+  # O(n^3), yuck!
+  while len(clust) > 1:
+    lowestpair = 0, 1
+    closest = distance(clust[0].vec, clust[1].vec)
+
+    # Loop through every pair looking for the smallest distance
+    for i in range(len(clust)):
+      for j in range(i + 1, len(clust)):
+        # XXX: cache distances!
+
+        d = distance(clust[i].vec, clust[j].vec)
+
+        if d < closest:
+          closest = d
+          lowestpair = i, j
+
+    # Merge closest pair into a single vector
+    mergevec = mergevecs(clust[lowestpair[0]].vec, clust[lowestpair[1]].vec)
+
+    newcluster = bicluster(mergevec, left=clust[lowestpair[0]],
+        right=clust[lowestpair[1]], distance=closest, id=currentclustid)
+
+    # Update
+    currentclustid -= 1
+    del clust[lowestpair[1]]  # Need to del() bigger index first!
+    del clust[lowestpair[0]]
+    clust.append(newcluster)
+
+  return clust[0]

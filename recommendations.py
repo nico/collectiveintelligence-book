@@ -25,6 +25,10 @@ def sim_pearson(prefs, person1, person2):
   for item in prefs[person1]:
     if item in prefs[person2]: ci[item] = 1
 
+
+  if len(ci) == 1:  # confuses pearson metric
+    return sim_distance(prefs, person1, person2)
+
   v1 = [prefs[person1][it] for it in ci]
   v2 = [prefs[person2][it] for it in ci]
   return clusters.pearson(v1, v2)
