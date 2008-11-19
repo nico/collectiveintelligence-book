@@ -17,6 +17,11 @@ def do_readfile(lines):
 
 
 def pearson(v1, v2):
+  """Returns the similarity between v1 and v2.
+
+  1.0 means very similar and 0.0 means no correlation. -1.0 means
+  anticorrelation.  v1 and v2 must have the same number of elements."""
+
   assert len(v1) == len(v2)
 
   n = len(v1)
@@ -37,3 +42,17 @@ def pearson(v1, v2):
     else: return 0
 
   return num/den
+
+
+def pearson_dist(v1, v2):
+  """0.0 means "near", 1.0 means "far"."""
+  return 1 - pearson(v1, v2)
+
+
+class bicluster(object):
+  def __init__(self, vec, left=None, right=None, distance=0.0, id=None):
+    self.vec = vec
+    self.left = left
+    self.right = right
+    self.distance = distance
+    self.id = id
