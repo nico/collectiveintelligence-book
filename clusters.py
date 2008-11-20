@@ -96,7 +96,8 @@ def hcluster(rows, distance=pearson_dist):
   # Clusters start off as just rows
   clust = [bicluster(rows[i], id=i) for i in range(len(rows))]
 
-  # O(n^3), yuck!
+  # O(n^3), yuck! Effectively, only the distance() calls are expensive,
+  # and we cache them, this is really O(n^2)
   while len(clust) > 1:
     lowestpair = 0, 1
     closest = distance(clust[0].vec, clust[1].vec)
@@ -104,9 +105,12 @@ def hcluster(rows, distance=pearson_dist):
     # Loop through every pair looking for the smallest distance
     for i in range(len(clust)):
       for j in range(i + 1, len(clust)):
-        # XXX: cache distances!
-
-        d = distance(clust[i].vec, clust[j].vec)
+        # cache distances. Makes this much faster.
+        # (can't use the cache() function because we cache on indices, not
+        # function arguments)
+        if (i, j) not in distances:
+          distances[i, j] = distance(clust[i].vec, clust[j].vec)
+        d = distances[i, j]
 
         if d < closest:
           closest = d
@@ -125,3 +129,7 @@ def hcluster(rows, distance=pearson_dist):
     clust.append(newcluster)
 
   return clust[0]
+
+if __name__ == '__main__':
+  _, _, data = readfile('blogdata.txt')
+  hcluster(data)
