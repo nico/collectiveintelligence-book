@@ -130,6 +130,21 @@ def hcluster(rows, distance=pearson_dist):
 
   return clust[0]
 
+
+def printclust(clust, labels=None, n=0):
+  print ' ' * n,
+  if clust.id < 0:  # branch
+    print '-'
+  else:
+    print labels[clust.id] if labels else clust.id
+
+  if clust.left: printclust(clust.left, labels=labels, n=n+1)
+  if clust.right: printclust(clust.right, labels=labels, n=n+1)
+
+
 if __name__ == '__main__':
-  _, _, data = readfile('blogdata.txt')
-  hcluster(data)
+  import drawclust
+  blognames, words, data = readfile('blogdata.txt')
+  c = hcluster(data)
+  printclust(c, labels=blognames)
+  drawclust.drawdendogram(c, blognames, 'dendo.png')
