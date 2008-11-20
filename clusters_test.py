@@ -54,5 +54,17 @@ class HclusterTest(unittest.TestCase):
     self.assertEquals(c1, clusters.hcluster(rows))
 
 
+class TransposeTest(unittest.TestCase):
+
+  def test1x3(self):
+    self.assertEquals([[1], [2], [3]], clusters.transpose([[1, 2, 3]]))
+
+  def test3x1(self):
+    self.assertEquals([[1, 2, 3]], clusters.transpose([[1], [2], [3]]))
+
+  def test2x2(self):
+    self.assertEquals([[1, 2], [5, 3]], clusters.transpose([[1, 5], [2, 3]]))
+
+
 if __name__ == '__main__':
   unittest.main()

@@ -142,9 +142,20 @@ def printclust(clust, labels=None, n=0):
   if clust.right: printclust(clust.right, labels=labels, n=n+1)
 
 
+def transpose(data):
+  return map(list, zip(*data))
+
+
 if __name__ == '__main__':
   import drawclust
   blognames, words, data = readfile('blogdata.txt')
   c = hcluster(data)
-  printclust(c, labels=blognames)
+  #printclust(c, labels=blognames)
   drawclust.drawdendogram(c, blognames, 'dendo.png')
+  print 'Wrote dendo.png'
+
+  # this is _much_ slower, as hcluster computes O(rows^2) many distances,
+  # and there are many more words than blognames in out data.
+  c = hcluster(transpose(data))
+  drawclust.drawdendogram(c, words, 'dendo_words.png')
+  print 'Wrote dendo_words.png'
