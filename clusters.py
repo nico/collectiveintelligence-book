@@ -1,4 +1,5 @@
 from math import sqrt
+import random
 
 
 def readfile(filename):
@@ -146,6 +147,46 @@ def transpose(data):
   return map(list, zip(*data))
 
 
+# XXX: break into smaller pieces, test them
+def kcluster(rows, distance=pearson_dist, k=4):
+  # Our points are the columns (words in the example) of our data matrix.
+  # Compute bounding box of points (in len(rows)-dimensional space)
+  ranges = zip(map(min, transpose(rows)), map(max, transpose(rows)))
+
+  clusters = [[random.uniform(r[0], r[1]) for r in ranges] for j in range(k)]
+
+  lastmatches = None
+  for t in range(100):
+    print 'Iteration', t
+    bestmatches = [[] for i in range(k)]
+
+    # find best centroid for each row
+    for j in range(len(rows)):
+      row = rows[j]
+      bestmatch = 0
+      for i in range(k):
+        d = distance(clusters[i], row)
+        if d < distance(clusters[bestmatch], row): bestmatch = i
+      bestmatches[bestmatch].append(j)
+      
+    # if the results didn't change in this iteration, we are done
+    if bestmatches == lastmatches: break
+    lastmatches = bestmatches
+
+    # move centroids to the averages of their elements
+    for i in range(k):
+      avgs = [0.0] * len(rows[0])
+      if len(bestmatches[i]) > 0:
+        for rowid in bestmatches[i]:
+          for m in range(len(rows[rowid])):
+            avgs[m] += rows[rowid][m]
+        for j in range(len(avgs)):
+          avgs[j] /= len(bestmatches[i])
+        clusters[i] = avgs
+
+  return bestmatches
+
+
 if __name__ == '__main__':
   import drawclust
   blognames, words, data = readfile('blogdata.txt')
@@ -154,8 +195,8 @@ if __name__ == '__main__':
   drawclust.drawdendogram(c, blognames, 'dendo.png')
   print 'Wrote dendo.png'
 
-  # this is _much_ slower, as hcluster computes O(rows^2) many distances,
-  # and there are many more words than blognames in out data.
-  c = hcluster(transpose(data))
-  drawclust.drawdendogram(c, words, 'dendo_words.png')
-  print 'Wrote dendo_words.png'
+  ## this is _much_ slower, as hcluster computes O(rows^2) many distances,
+  ## and there are many more words than blognames in out data.
+  #c = hcluster(transpose(data))
+  #drawclust.drawdendogram(c, words, 'dendo_words.png')
+  #print 'Wrote dendo_words.png'
