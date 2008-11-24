@@ -99,5 +99,15 @@ class AverageTest(unittest.TestCase):
     self.assertEquals([7.0/2, -1.0/2], clusters.average([0, 2], m))
 
 
+class KclusterTest(unittest.TestCase):
+
+  def testNormal(self):
+    m = [[ 1,  2],
+         [ 0, -1],
+         [ 2,  4]]
+
+    self.assertEquals([[0, 2], [1]], sorted(clusters.kcluster(m, k=2)))
+
+
 if __name__ == '__main__':
   unittest.main()

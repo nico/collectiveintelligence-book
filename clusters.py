@@ -176,10 +176,9 @@ def average(indices, rows):
 
 
 def kcluster(rows, distance=pearson_dist, k=4):
-  # Our points are the rows (blogs in the example) of our data matrix.
-  # Compute bounding box of points (in len(rows)-dimensional space)
-  ranges = columnbb(rows)
+  """Returns a list of `k` lists, each containing all indices of a cluster."""
 
+  ranges = rowbb(rows)
   clusters = [[random.uniform(r[0], r[1]) for r in ranges] for j in range(k)]
 
   lastmatches = None
@@ -229,4 +228,4 @@ if __name__ == '__main__':
   wants, people, data = readfile('official_zebo.txt')
   cl = hcluster(data, distance=tanimoto_dist)
   drawclust.drawdendogram(cl, wants, 'wants.png')
-  
+  print 'Wrote wants.png'
