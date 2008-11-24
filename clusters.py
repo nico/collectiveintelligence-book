@@ -147,11 +147,26 @@ def transpose(data):
   return map(list, zip(*data))
 
 
+def rowbb(rows):
+  """Returns the bounding box of the row vectors of the matrix `rows`
+  as list of min/max pairs for each dimension."""
+  return zip(map(min, transpose(rows)), map(max, transpose(rows)))
+
+
+def getnearest(v, points, distance):
+  """Returns the index of the point in `points` closest to `v`."""
+  bestmatch = 0
+  for i in range(len(points)):
+    d = distance(points[i], v)
+    if d < distance(points[bestmatch], v): bestmatch = i
+  return bestmatch
+
+
 # XXX: break into smaller pieces, test them
 def kcluster(rows, distance=pearson_dist, k=4):
-  # Our points are the columns (words in the example) of our data matrix.
+  # Our points are the rows (blogs in the example) of our data matrix.
   # Compute bounding box of points (in len(rows)-dimensional space)
-  ranges = zip(map(min, transpose(rows)), map(max, transpose(rows)))
+  ranges = columnbb(rows)
 
   clusters = [[random.uniform(r[0], r[1]) for r in ranges] for j in range(k)]
 
@@ -162,12 +177,7 @@ def kcluster(rows, distance=pearson_dist, k=4):
 
     # find best centroid for each row
     for j in range(len(rows)):
-      row = rows[j]
-      bestmatch = 0
-      for i in range(k):
-        d = distance(clusters[i], row)
-        if d < distance(clusters[bestmatch], row): bestmatch = i
-      bestmatches[bestmatch].append(j)
+      bestmatches[getnearest(rows[j], clusters, distance)].append(j)
       
     # if the results didn't change in this iteration, we are done
     if bestmatches == lastmatches: break
@@ -187,7 +197,16 @@ def kcluster(rows, distance=pearson_dist, k=4):
   return bestmatches
 
 
+def tanimoto_dist(v1, v2):
+  c1, c2, shr = 0, 0, 0
+  for i in range(len(v1)):
+    if v1[i] != 0: c1 += 1
+    if v2[i] != 0: c2 += 1
+    if v1[i] != 0 and v2[i] != 0: shr += 1
+  return 1.0 - float(shr)/(c1 + c2 - shr)
+
 if __name__ == '__main__':
+  # stupid demo
   import drawclust
   blognames, words, data = readfile('blogdata.txt')
   c = hcluster(data)
@@ -200,3 +219,9 @@ if __name__ == '__main__':
   #c = hcluster(transpose(data))
   #drawclust.drawdendogram(c, words, 'dendo_words.png')
   #print 'Wrote dendo_words.png'
+
+  # another demo
+  wants, people, data = readfile('official_zebo.txt')
+  cl = hcluster(data, distance=tanimoto_dist)
+  drawclust.drawdendogram(cl, wants, 'wants.png')
+  

@@ -66,5 +66,27 @@ class TransposeTest(unittest.TestCase):
     self.assertEquals([[1, 2], [5, 3]], clusters.transpose([[1, 5], [2, 3]]))
 
 
+class RowbbTest(unittest.TestCase):
+
+  def testNormal(self):
+    m = [[-1,  4],
+         [ 0,  0],
+         [ 8, -5]]
+    self.assertEquals([(-1, 8), (-5, 4)], clusters.rowbb(m))
+
+
+class GetnearestTest(unittest.TestCase):
+
+  def testNormal(self):
+
+    points = [[1, 2, 3], [-2, -4, -6], [1, 0, 1]]
+    self.assertEquals(0, clusters.getnearest([2, 4, 6], points,
+      clusters.pearson_dist))
+    self.assertEquals(1, clusters.getnearest([-1, -2, -3], points,
+      clusters.pearson_dist))
+    self.assertEquals(2, clusters.getnearest([2, 0, 2], points,
+      clusters.pearson_dist))
+
+
 if __name__ == '__main__':
   unittest.main()
