@@ -162,7 +162,19 @@ def getnearest(v, points, distance):
   return bestmatch
 
 
-# XXX: break into smaller pieces, test them
+def average(indices, rows):
+  """Returns the average of all rows indexed by `indices`. All rows have to
+  have the same number of elements."""
+  avg = [0.0] * len(rows[0])
+  if len(indices) > 0:
+    for rowid in indices:
+      for m in range(len(rows[0])):
+        avg[m] += rows[rowid][m]
+    for j in range(len(avg)):
+      avg[j] /= len(indices)
+  return avg
+
+
 def kcluster(rows, distance=pearson_dist, k=4):
   # Our points are the rows (blogs in the example) of our data matrix.
   # Compute bounding box of points (in len(rows)-dimensional space)
@@ -185,14 +197,7 @@ def kcluster(rows, distance=pearson_dist, k=4):
 
     # move centroids to the averages of their elements
     for i in range(k):
-      avgs = [0.0] * len(rows[0])
-      if len(bestmatches[i]) > 0:
-        for rowid in bestmatches[i]:
-          for m in range(len(rows[rowid])):
-            avgs[m] += rows[rowid][m]
-        for j in range(len(avgs)):
-          avgs[j] /= len(bestmatches[i])
-        clusters[i] = avgs
+      clusters[i] = average(bestmatches[i], rows)
 
   return bestmatches
 

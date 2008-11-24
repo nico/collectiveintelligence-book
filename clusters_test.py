@@ -88,5 +88,16 @@ class GetnearestTest(unittest.TestCase):
       clusters.pearson_dist))
 
 
+class AverageTest(unittest.TestCase):
+
+  def testNormal(self):
+
+    m = [[-1,  4],
+         [ 0,  0],
+         [ 8, -5]]
+
+    self.assertEquals([7.0/2, -1.0/2], clusters.average([0, 2], m))
+
+
 if __name__ == '__main__':
   unittest.main()
