@@ -98,7 +98,7 @@ def hcluster(rows, distance=pearson_dist):
   clust = [bicluster(rows[i], id=i) for i in range(len(rows))]
 
   # O(n^3), yuck! Effectively, only the distance() calls are expensive,
-  # and we cache them, this is really O(n^2)
+  # and we cache them, so this is really O(n^2)
   while len(clust) > 1:
     lowestpair = 0, 1
     closest = distance(clust[0].vec, clust[1].vec)
@@ -109,9 +109,14 @@ def hcluster(rows, distance=pearson_dist):
         # cache distances. Makes this much faster.
         # (can't use the cache() function because we cache on indices, not
         # function arguments)
-        if (i, j) not in distances:
-          distances[i, j] = distance(clust[i].vec, clust[j].vec)
-        d = distances[i, j]
+        if (clust[i].id,clust[j].id) not in distances: 
+          distances[(clust[i].id,clust[j].id)]=distance(clust[i].vec,clust[j].vec)
+
+        d=distances[(clust[i].id,clust[j].id)]
+        
+        #if (i, j) not in distances:
+          #distances[i, j] = distance(clust[i].vec, clust[j].vec)
+        #d = distances[i, j]
 
         if d < closest:
           closest = d
@@ -209,6 +214,7 @@ def tanimoto_dist(v1, v2):
     if v1[i] != 0 and v2[i] != 0: shr += 1
   return 1.0 - float(shr)/(c1 + c2 - shr)
 
+
 if __name__ == '__main__':
   # stupid demo
   import drawclust
@@ -223,6 +229,11 @@ if __name__ == '__main__':
   #c = hcluster(transpose(data))
   #drawclust.drawdendogram(c, words, 'dendo_words.png')
   #print 'Wrote dendo_words.png'
+
+  kclust = kcluster(data, k=10)
+  for i in range(len(kclust)):
+    print 'k-cluster %d:' % i, [blognames[r] for r in kclust[i]]
+    print
 
   # another demo
   wants, people, data = readfile('official_zebo.txt')
