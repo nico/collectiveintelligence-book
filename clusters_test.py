@@ -38,20 +38,29 @@ class BiclusterTest(unittest.TestCase):
 class HclusterTest(unittest.TestCase):
 
   def testNormal(self):
-    rows = [[0, 0, 0],
+    rows = [[6, 4, 2],
             [2, 4, 6],
-            [1, 2, 3]]
+            [1, 2, 3],
+            [3, 2, 1.01]]
 
 
     clust = [clusters.bicluster(rows[i], id=i) for i in range(len(rows))]
 
     c0 = clusters.bicluster(clusters.mergevecs(rows[1], rows[2]),
       left=clust[1], right=clust[2], id=-1, distance=0.0)
-    c1 = clusters.bicluster(clusters.mergevecs(rows[0], c0.vec),
-      left=clust[0], right=c0, id=-2,
-      distance=clusters.pearson_dist(rows[0], c0.vec))
+    c1 = clusters.bicluster(clusters.mergevecs(rows[0], rows[3]),
+      left=clust[0], right=clust[3], id=-2,
+      distance=clusters.pearson_dist(rows[0], rows[3]))
+    c2 = clusters.bicluster(clusters.mergevecs(c0.vec, c1.vec),
+      left=c0, right=c1, id=-3,
+      distance=clusters.pearson_dist(c0.vec, c1.vec))
+    print
+    print c2
+    print
+    print clusters.hcluster(rows)
+    print
 
-    self.assertEquals(c1, clusters.hcluster(rows))
+    self.assertEquals(c2, clusters.hcluster(rows))
 
 
 class TransposeTest(unittest.TestCase):

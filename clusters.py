@@ -110,14 +110,10 @@ def hcluster(rows, distance=pearson_dist):
         # (can't use the cache() function because we cache on indices, not
         # function arguments)
         if (clust[i].id,clust[j].id) not in distances: 
-          distances[(clust[i].id,clust[j].id)]=distance(clust[i].vec,clust[j].vec)
-
-        d=distances[(clust[i].id,clust[j].id)]
+          distances[(clust[i].id,clust[j].id)] = distance(
+              clust[i].vec,clust[j].vec)
+        d = distances[(clust[i].id,clust[j].id)]
         
-        #if (i, j) not in distances:
-          #distances[i, j] = distance(clust[i].vec, clust[j].vec)
-        #d = distances[i, j]
-
         if d < closest:
           closest = d
           lowestpair = i, j
