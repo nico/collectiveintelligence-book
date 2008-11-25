@@ -235,8 +235,7 @@ def scaledown(data, distance=pearson_dist, rate=0.01):
     # find projected distance
     for i in range(n):
       for j in range(n):
-        fakedist[i][j] = sqrt(sum([pow(loc[i][x] - loc[j][x], 2)
-          for x in range(len(loc[i]))]))
+        fakedist[i][j] = euclid_dist(loc[i], loc[j])
 
     # move points
     grad = [[0.0, 0.0] for i in range(n)]
