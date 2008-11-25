@@ -44,3 +44,12 @@ def drawnode(draw, clust, x, y, scale, labels):
   else:
     draw.text((x + 5, y - 7), labels[clust.id], (0, 0, 0))
 
+
+def draw2d(data, labels, filename='clust2d.png'):
+  img = Image.new('RGB', (2000, 2000), (255, 255, 255))
+  draw = ImageDraw.Draw(img)
+  for i in range(len(data)):
+    x = (data[i][0] + 0.5) * 1000
+    y = (data[i][1] + 0.5) * 1000
+    draw.text((x, y), labels[i], (0, 0, 0))
+  img.save(filename)

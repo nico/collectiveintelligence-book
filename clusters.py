@@ -228,14 +228,12 @@ def scaledown(data, distance=pearson_dist, rate=0.01):
 
   # random start positions
   loc = [[random.random(), random.random()] for i in range(n)]
-  fakedist = [[0.0 for j in range(n)] for i in range(n)]
 
   lasterror = None
   for m in range(0, 1000):
     # find projected distance
-    for i in range(n):
-      for j in range(n):
-        fakedist[i][j] = euclid_dist(loc[i], loc[j])
+    fakedist = [[euclid_dist(loc[i], loc[j])
+      for j in range(n)] for i in range(n)]
 
     # move points
     grad = [[0.0, 0.0] for i in range(n)]
@@ -252,7 +250,7 @@ def scaledown(data, distance=pearson_dist, rate=0.01):
         grad[k][1] += ((loc[k][1] - loc[j][1])/fakedist[j][k]) * errorterm
 
         totalerror += abs(errorterm)
-    #print totalerror
+    print totalerror
 
     # if we got worse by moving the points, quit
     if lasterror and lasterror < totalerror: break
@@ -291,6 +289,11 @@ if __name__ == '__main__':
     print
 
   # another demo
+  coords = scaledown(data)
+  drawclust.draw2d(coords, blognames, filename='blogs2d.png')
+  print 'Wrote blogs2d.png'
+
+  # and yet another demo
   wants, people, data = readfile('official_zebo.txt')
   cl = hcluster(data, distance=tanimoto_dist)
   drawclust.drawdendogram(cl, wants, 'wants.png')
