@@ -212,6 +212,14 @@ def tanimoto_dist(v1, v2):
   return 1.0 - float(shr)/(c1 + c2 - shr)
 
 
+def hypot(v):
+  return sqrt(sum([x*x for x in v]))
+
+
+def euclid_dist(v1, v2):
+  return hypot([v[0] - v[1] for v in zip(v1, v2)])
+
+
 def scaledown(data, distance=pearson_dist, rate=0.01):
   n = len(data)
 

@@ -54,11 +54,6 @@ class HclusterTest(unittest.TestCase):
     c2 = clusters.bicluster(clusters.mergevecs(c0.vec, c1.vec),
       left=c0, right=c1, id=-3,
       distance=clusters.pearson_dist(c0.vec, c1.vec))
-    print
-    print c2
-    print
-    print clusters.hcluster(rows)
-    print
 
     self.assertEquals(c2, clusters.hcluster(rows))
 
@@ -118,20 +113,26 @@ class KclusterTest(unittest.TestCase):
     self.assertEquals([[0, 2], [1]], sorted(clusters.kcluster(m, k=2)))
 
 
+class EuclDistTest(unittest.TestCase):
+
+  def testNormal(self):
+
+    self.assertAlmostEquals(5, clusters.hypot([3, 4]))
+    self.assertAlmostEquals(5, clusters.hypot([3, 3, 1, 1, 1, 1, 1, 1, 1]))
+    self.assertAlmostEquals(5, clusters.euclid_dist([0, 0, 0], [3, 4, 0]))
+
+
 class ScaledownTest(unittest.TestCase):
 
   def testNormal(self):
 
-    def dist(v1, v2):
-      import math
-      return math.sqrt(sum([(v1[i] - v2[i]) ** 2 for i in range(len(v1))]))
-
     m = [[1, 0, 2, 0],
          [2, 0, 3, 0]]
 
-    r = clusters.scaledown(m, distance=dist, rate=0.1)
+    r = clusters.scaledown(m, distance=clusters.euclid_dist, rate=0.1)
     self.assertEquals(2, len(r))
-    self.assertAlmostEquals(dist(m[0], m[1]), dist(r[0], r[1]))
+    self.assertAlmostEquals(clusters.euclid_dist(m[0], m[1]),
+        clusters.euclid_dist(r[0], r[1]))
 
 
 if __name__ == '__main__':
