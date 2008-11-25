@@ -107,8 +107,9 @@ def hcluster(rows, distance=pearson_dist):
     for i in range(len(clust)):
       for j in range(i + 1, len(clust)):
         # cache distances. Makes this much faster.
-        # (can't use the cache() function because we cache on indices, not
-        # function arguments)
+        # (can't use the cache() function because we cache on ids, not
+        # function arguments. as clust shrinks, we can't just cache on indices
+        # either)
         if (clust[i].id,clust[j].id) not in distances: 
           distances[(clust[i].id,clust[j].id)] = distance(
               clust[i].vec,clust[j].vec)
@@ -209,6 +210,57 @@ def tanimoto_dist(v1, v2):
     if v2[i] != 0: c2 += 1
     if v1[i] != 0 and v2[i] != 0: shr += 1
   return 1.0 - float(shr)/(c1 + c2 - shr)
+
+
+def scaledown(data, distance=pearson_dist, rate=0.01):
+  n = len(data)
+
+  realdist = [[distance(data[i], data[j]) for j in range(n)] for i in range(n)]
+  outersum = 0.0
+
+  # random start positions
+  loc = [[random.random(), random.random()] for i in range(n)]
+  fakedist = [[0.0 for j in range(n)] for i in range(n)]
+
+  lasterror = None
+  for m in range(0, 1000):
+    # find projected distance
+    for i in range(n):
+      for j in range(n):
+        fakedist[i][j] = sqrt(sum([pow(loc[i][x] - loc[j][x], 2)
+          for x in range(len(loc[i]))]))
+
+    # move points
+    grad = [[0.0, 0.0] for i in range(n)]
+
+    totalerror = 0
+    for k in range(n):
+      for j in range(n):
+        if j == k: continue
+
+        # error is percent difference between distances
+        errorterm = (fakedist[j][k] - realdist[j][k])/realdist[j][k]
+
+        grad[k][0] += ((loc[k][0] - loc[j][0])/fakedist[j][k]) * errorterm
+        grad[k][1] += ((loc[k][1] - loc[j][1])/fakedist[j][k]) * errorterm
+
+        totalerror += abs(errorterm)
+    #print totalerror
+
+    # if we got worse by moving the points, quit
+    if lasterror and lasterror < totalerror: break
+
+    # also break if the improvement is only very small
+    if lasterror and lasterror - totalerror < 1e-15: break
+
+    lasterror = totalerror
+
+    # move points by learning rate times gradient
+    if k in range(n):
+      loc[k][0] -= rate * grad[k][0]
+      loc[k][1] -= rate * grad[k][1]
+
+  return loc
 
 
 if __name__ == '__main__':

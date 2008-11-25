@@ -118,5 +118,21 @@ class KclusterTest(unittest.TestCase):
     self.assertEquals([[0, 2], [1]], sorted(clusters.kcluster(m, k=2)))
 
 
+class ScaledownTest(unittest.TestCase):
+
+  def testNormal(self):
+
+    def dist(v1, v2):
+      import math
+      return math.sqrt(sum([(v1[i] - v2[i]) ** 2 for i in range(len(v1))]))
+
+    m = [[1, 0, 2, 0],
+         [2, 0, 3, 0]]
+
+    r = clusters.scaledown(m, distance=dist, rate=0.1)
+    self.assertEquals(2, len(r))
+    self.assertAlmostEquals(dist(m[0], m[1]), dist(r[0], r[1]))
+
+
 if __name__ == '__main__':
   unittest.main()

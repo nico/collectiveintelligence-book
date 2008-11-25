@@ -43,3 +43,4 @@ def drawnode(draw, clust, x, y, scale, labels):
     drawnode(draw, clust.right, x + linelen, bottom - h2/2, scale, labels)
   else:
     draw.text((x + 5, y - 7), labels[clust.id], (0, 0, 0))
+
