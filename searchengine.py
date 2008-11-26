@@ -1,3 +1,11 @@
+import urllib2
+import urlparse
+from BeautifulSoup import BeautifulSoup
+
+
+ignorewords = set(['the', 'of', 'to', 'and', 'a', 'in', 'is', 'it'])
+
+
 class crawler:
   def __init__(self, dbname):
     pass
@@ -33,7 +41,39 @@ class crawler:
 
   def crawl(self, pages, depth=2):
     """Find pages linked from a root set in BFS order, up to a given depth."""
-    pass
+    for i in range(depth):
+      newpages = set()
+      for page in pages:
+        try:
+          print page
+          c = urllib2.urlopen(page)
+        except:
+          print 'Could not load', page
+          continue
+
+        if c.headers.type not in set(['text/html', 'text/plain']):
+          print 'Skipping', page, c.headers.type
+          continue
+
+        soup = BeautifulSoup(c.read())
+        self.addtoindex(page, soup)
+
+        links = soup.findAll('a')
+        for link in links:
+          if 'href' in dict(link.attrs):
+            url = urlparse.urljoin(page, link['href'])
+            if url.find("'") != -1:
+              print 'IGNORING', url
+              continue
+            url = url.split('#')[0]
+            if url[0:4] == 'http' and not self.isindexed(url):
+              newpages.add(url)
+            linktext = self.gettextonly(link)
+            self.addlinkref(page, url, linktext)
+
+        self.dbcommit()
+
+      pages = newpages
 
   def createindextables(self):
     """Create the database tables."""
