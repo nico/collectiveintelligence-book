@@ -1,4 +1,5 @@
 import os
+import re
 import urllib2
 import urlparse
 
@@ -29,11 +30,16 @@ class crawler:
 
   def gettextonly(self, soup):
     """Extracts all text from a html page, i.e. strips the tags."""
-    return None
+    v = soup.string
+    if v == None:
+      return '\n'.join([self.gettextonly(t) for t in soup.contents])
+    else:
+      return v.strip()
 
   def separatewords(self, text):
     """Splits words by non-whitespace characters."""
-    return None
+    splitter = re.compile(r'\W*')
+    return [s.lower() for s in splitter.split(text) if s != '']
 
   def isindexed(self, url):
     return False
