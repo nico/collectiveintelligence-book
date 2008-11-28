@@ -1,5 +1,7 @@
 import urllib2
 import urlparse
+
+from pysqlite2 import dbapi2 as sqlite
 from BeautifulSoup import BeautifulSoup
 
 
@@ -8,13 +10,13 @@ ignorewords = set(['the', 'of', 'to', 'and', 'a', 'in', 'is', 'it'])
 
 class crawler:
   def __init__(self, dbname):
-    pass
+    self.con = sqlite.connect(dbname)
 
   def __del__(self):
-    pass
+    self.con.close()
 
   def dbcommit(self):
-    pass
+    self.con.commit()
 
   def getentryid(self, table, field, value, createnew=True):
     """Returns an entry id and creates it if it is not present."""
@@ -47,7 +49,7 @@ class crawler:
         try:
           print page
           c = urllib2.urlopen(page)
-        except:
+        except urllib2.URLError:
           print 'Could not load', page
           continue
 
@@ -78,3 +80,9 @@ class crawler:
   def createindextables(self):
     """Create the database tables."""
     pass
+
+
+
+if __name__ == '__main__':
+  crawl = crawler('')
+  crawl.crawl(['http://amnoid.de/'], depth=3)
