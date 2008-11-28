@@ -11,6 +11,7 @@ ignorewords = set(['the', 'of', 'to', 'and', 'a', 'in', 'is', 'it'])
 
 
 class crawler:
+
   def __init__(self, dbname):
     self.con = sqlite.connect(dbname)
 
@@ -22,11 +23,35 @@ class crawler:
 
   def getentryid(self, table, field, value, createnew=True):
     """Returns an entry id and creates it if it is not present."""
-    return None
+    cur = self.con.execute('select rowid from %s where %s="%s"'
+        % (table, field, value))
+    result = cur.fetchone()
+    if not result:
+      cur = self.con.execute('insert into %s (%s) values("%s")'
+          % (table, field, value))
+      return cur.lastrowid
+    else:
+      return result[0]
 
   def addtoindex(self, url, soup):
     """Indexes a given page."""
+    if self.isindexed(url): return
     print 'Indexing', url
+
+    # Extract words
+    text = self.gettextonly(soup)
+    words = self.separatewords(text)
+
+    # Get url id from db
+    urlid = self.getentryid('urllist', 'url', url)
+
+    # Link each word to that url
+    for i in range(len(words)):
+      word = words[i]
+      if word in ignorewords: continue
+      wordid = self.getentryid('wordlist', 'word', word)
+      self.con.execute('insert into wordlocation(urlid, wordid, location) \
+          values (%d, %d, %d)' % (urlid, wordid, i))
 
   def gettextonly(self, soup):
     """Extracts all text from a html page, i.e. strips the tags."""
@@ -42,7 +67,14 @@ class crawler:
     return [s.lower() for s in splitter.split(text) if s != '']
 
   def isindexed(self, url):
-    return False
+    cur = self.con.execute('select rowid from urllist where url="%s"' % url)
+    u = cur.fetchone()
+    if not u: return False
+
+    # check if it has been crawled (XXX: why?)
+    v = self.con.execute('select * from wordlocation where urlid="%d"'
+        % u[0]).fetchone()
+    return v != None
 
   def addlinkref(self, urlfrom, urlto, linktext):
     """Add a link between two pages."""
@@ -100,11 +132,19 @@ class crawler:
     self.dbcommit()
 
 
+class searcher:
+  def __init__(self, dbname):
+    self.con = sqlite.connect(dbname)
+
+  def __del__(self):
+    self.con = sqlite.close()
+
+
 
 if __name__ == '__main__':
+  create = not os.path.exists('searchindex.db')
   crawl = crawler('searchindex.db')
-
-  if not os.path.exists('searchindex.db'):
+  if create:
     crawl.createindextables()
 
   crawl.crawl(['http://amnoid.de/'], depth=3)
