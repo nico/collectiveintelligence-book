@@ -1,3 +1,4 @@
+import os
 import urllib2
 import urlparse
 
@@ -79,10 +80,25 @@ class crawler:
 
   def createindextables(self):
     """Create the database tables."""
-    pass
+    self.con.execute('create table urllist(url)')
+    self.con.execute('create table wordlist(word)')
+    self.con.execute('create table wordlocation(urlid, wordid, location)')
+    self.con.execute('create table link(fromid integer, toid integer)')
+    self.con.execute('create table linkwords(wordid, linkid)')
+
+    self.con.execute('create index urlidx on urllist(url)')
+    self.con.execute('create index wordidx on wordlist(word)')
+    self.con.execute('create index wordurlidx on wordlocation(wordid)')
+    self.con.execute('create index urlfromidx on link(fromid)')
+    self.con.execute('create index urltoidx on link(toid)')
+    self.dbcommit()
 
 
 
 if __name__ == '__main__':
-  crawl = crawler('')
+  crawl = crawler('searchindex.db')
+
+  if not os.path.exists('searchindex.db'):
+    crawl.createindextables()
+
   crawl.crawl(['http://amnoid.de/'], depth=3)
