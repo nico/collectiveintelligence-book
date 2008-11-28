@@ -137,7 +137,50 @@ class searcher:
     self.con = sqlite.connect(dbname)
 
   def __del__(self):
-    self.con = sqlite.close()
+    self.con.close()
+
+  def getmatchquery(self, q):
+    # Example query:
+    # SELECT w0.urlid, w0.location, w1.location, w2.location 
+    # FROM wordlocation w0, wordlocation w1, wordlocation w2 
+    # WHERE w0.wordid = 255
+    #       and w0.urlid = w1.urlid and w1.wordid = 1192
+    #       and w1.urlid = w2.urlid and w2.wordid = 73
+
+    # XXX: Break this into pieces, test them
+    fieldlist = 'w0.urlid'
+    tablelist = ''
+    clauselist = ''
+    wordids = []
+    words = q.split(' ')
+    tablecount = 0
+
+    for word in words:
+      wordrow = self.con.execute('select rowid from wordlist where word = "%s"'
+          % word).fetchone()
+      if not wordrow: continue
+      wordid = wordrow[0]
+      wordids.append(wordid)
+      if tablecount > 0:
+        tablelist += ', '
+        clauselist += ' and '
+        clauselist += 'w%d.urlid = w%d.urlid and ' % (
+            tablecount - 1, tablecount)
+      fieldlist += ', w%d.location' % tablecount
+      tablelist += 'wordlocation w%d' % tablecount
+      clauselist += 'w%d.wordid = %d' % (tablecount, wordid)
+      tablecount += 1
+
+    fullquery = 'select %s from %s where %s' % (
+        fieldlist, tablelist, clauselist)
+    return fullquery, wordids
+
+  def getmatchrows(self, q):
+    sql, wordids = self.getmatchquery(q)
+    print sql
+    cur = self.con.execute(sql)
+    rows = list(cur)
+    return rows, wordids
 
 
 
@@ -147,4 +190,8 @@ if __name__ == '__main__':
   if create:
     crawl.createindextables()
 
-  crawl.crawl(['http://amnoid.de/'], depth=3)
+  if False:
+    crawl.crawl(['http://amnoid.de/'], depth=3)
+
+  s = searcher('searchindex.db')
+  print s.getmatchrows('ddsview is great')
