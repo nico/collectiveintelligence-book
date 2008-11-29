@@ -171,6 +171,9 @@ class searcher:
       clauselist += 'w%d.wordid = %d' % (tablecount, wordid)
       tablecount += 1
 
+    if tablecount == 0:
+      return '', wordids
+
     fullquery = 'select %s from %s where %s' % (
         fieldlist, tablelist, clauselist)
     return fullquery, wordids
