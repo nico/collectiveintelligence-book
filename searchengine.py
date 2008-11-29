@@ -147,6 +147,9 @@ class searcher:
     #       and w0.urlid = w1.urlid and w1.wordid = 1192
     #       and w1.urlid = w2.urlid and w2.wordid = 73
 
+    # XXX: This returns O((n/k)^k) many results for a query with k known words
+    #      (n is number of words on a page) for each page.
+
     # XXX: Break this into pieces, test them
     fieldlist = 'w0.urlid'
     tablelist = ''
@@ -179,6 +182,8 @@ class searcher:
     return fullquery, wordids
 
   def getmatchrows(self, q):
+    """Returns list of tuples. 1st element of each tuple is urlid, the others
+    are the positions of each query word in that document."""
     sql, wordids = self.getmatchquery(q)
     print sql
     cur = self.con.execute(sql)
@@ -188,7 +193,7 @@ class searcher:
   def getscoredlist(self, rows, wordids):
     totalscores = dict([(row[0], 0) for row in rows])
 
-    weights = []
+    weights = [(1.0, self.frequencyscore(rows))]
 
     for weight, scores in weights:
       for url in totalscores:
@@ -207,6 +212,13 @@ class searcher:
       reverse=True)
     return [(score, self.geturlname(urlid))
         for (score, urlid) in rankedscores[0:10]]
+
+  # Scoring functions
+
+  def frequencyscore(self, rows):
+    counts = dict([(row[0], 0) for row in rows])
+    for row in rows: counts[row[0]] += 1  #disproportionally high, see XXX above
+    return counts
 
 
 if __name__ == '__main__':
