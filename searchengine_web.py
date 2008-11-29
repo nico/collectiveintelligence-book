@@ -29,9 +29,12 @@ def serve_search(environ, start_response):
       # occurence of q.
       query_words = query_dict['q'][0]
       s = searchengine.searcher('searchindex.db')
-      results = s.getmatchrows(query_words)
+      results = '<br>\n'.join(['%f: <a href="%s">%s</a>' % (score, url, url)
+        for score, url in s.query(query_words)])
+      results = results.encode('utf-8')
 
   start_response('200 OK',[('Content-type','text/html')])
+  print template % locals()
   return [template % locals()]
 
 
