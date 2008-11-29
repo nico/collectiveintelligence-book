@@ -24,7 +24,10 @@ def serve_search(environ, start_response):
   if 'QUERY_STRING' in environ:
     query_dict = cgi.parse_qs(environ['QUERY_STRING'])
     if 'q' in query_dict:
-      query_words = query_dict['q'][0]  # XXX: why is this a dict of lists?
+      # parse_qs returns a list for values as query parameters can appear
+      # several times (e.g. 'q=ddsview&q=makeicns'). Ignore all but the first
+      # occurence of q.
+      query_words = query_dict['q'][0]
       s = searchengine.searcher('searchindex.db')
       results = s.getmatchrows(query_words)
 
