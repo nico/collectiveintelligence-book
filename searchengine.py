@@ -205,6 +205,7 @@ class searcher:
 
   def getscoredlist(self, rows, wordids):
     totalscores = dict([(row[0], 0) for row in rows])
+    if not rows: return totalscores
 
     weightedScores = [(0.0, self.frequencyscore(rows)),
         (0.0, self.locationscore(rows)),
@@ -233,8 +234,6 @@ class searcher:
   # Scoring functions
 
   def normalizescores(self, scores, smallIsBetter=False):
-    if not scores: return scores
-
     vsmall = 0.00001  # smoothen out division by zero
     if smallIsBetter:
       minscore = min(scores.values())
@@ -283,7 +282,7 @@ if __name__ == '__main__':
   if create:
     crawl.createindextables()
 
-  if False:
+  if True:
     crawl.crawl(['http://amnoid.de/'], depth=3)
 
   s = searcher('searchindex.db')
