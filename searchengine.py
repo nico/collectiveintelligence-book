@@ -193,7 +193,8 @@ class searcher:
   def getscoredlist(self, rows, wordids):
     totalscores = dict([(row[0], 0) for row in rows])
 
-    weights = [(1.0, self.frequencyscore(rows))]
+    weights = [(1.0, self.frequencyscore(rows)),
+        (1.0, self.locationscore(rows))]
 
     for weight, scores in weights:
       for url in totalscores:
@@ -215,10 +216,30 @@ class searcher:
 
   # Scoring functions
 
+  def normalizescores(self, scores, smallIsBetter=False):
+    vsmall = 0.00001  # smoothen out division by zero
+    if smallIsBetter:
+      minscore = min(scores.values())
+      return dict([(u, float(minscore)/max(vsmall, l))
+        for (u, l) in scores.items()])
+    else:
+      maxscore = max(scores.values())
+      if maxscore == 0: maxscore = vsmall
+      return dict([(u, float(c)/maxscore) for (u, c) in scores.items()])
+
   def frequencyscore(self, rows):
     counts = dict([(row[0], 0) for row in rows])
-    for row in rows: counts[row[0]] += 1  #disproportionally high, see XXX above
-    return counts
+
+    # disproportionally high, see the "XXX" above
+    for row in rows: counts[row[0]] += 1
+    return self.normalizescores(counts, smallIsBetter=False)
+
+  def locationscore(self, rows):
+    locations = dict([(row[0], 1000000) for row in rows])
+    for row in rows:
+      loc = sum(row[1:])
+      if loc < locations[row[0]]: locations[row[0]] = loc
+    return self.normalizescores(locations, smallIsBetter=True)
 
 
 if __name__ == '__main__':
@@ -231,4 +252,4 @@ if __name__ == '__main__':
     crawl.crawl(['http://amnoid.de/'], depth=3)
 
   s = searcher('searchindex.db')
-  print s.getmatchrows('ddsview is great')
+  print s.query('ddsview is great')
