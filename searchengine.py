@@ -78,7 +78,20 @@ class crawler:
 
   def addlinkref(self, urlfrom, urlto, linktext):
     """Add a link between two pages."""
-    pass
+    fromid = self.getentryid('urllist', 'url', urlfrom)
+    toid = self.getentryid('urllist', 'url', urlto)
+    if fromid == toid: return
+    cur = self.con.execute('insert into link (fromid, toid) values (%d, %d)'
+        % (fromid, toid))
+
+    linkid = cur.lastrowid
+    # Remember each word in link text
+    for word in self.separatewords(linktext):
+      if word in ignorewords: continue
+      wordid = self.getentryid('wordlist', 'word', word)
+      self.con.execute('insert into linkwords (wordid, linkid) \
+          values (%d, %d)' % (wordid, linkid))
+
 
   def crawl(self, pages, depth=2):
     """Find pages linked from a root set in BFS order, up to a given depth."""
@@ -193,9 +206,11 @@ class searcher:
   def getscoredlist(self, rows, wordids):
     totalscores = dict([(row[0], 0) for row in rows])
 
-    weightedScores = [(1.0, self.frequencyscore(rows)),
-        (1.0, self.locationscore(rows)),
-        (3.0, self.locationscore(rows))]
+    weightedScores = [(0.0, self.frequencyscore(rows)),
+        (0.0, self.locationscore(rows)),
+        (0.0, self.distancescore(rows)),
+        (1.0, self.inboundlinkscore(rows)),
+        ]
 
     for weight, scores in weightedScores:
       for url in totalscores:
@@ -251,8 +266,15 @@ class searcher:
     mindistance = dict([(row[0], 1000000) for row in rows])
     for row in rows:
       dist = sum([abs(row[i] - row[i - 1]) for i in range(2, len(row))])
-      if dist < mindistance[rows[0]]: mindistance[rows[0]] = dist
+      if dist < mindistance[row[0]]: mindistance[row[0]] = dist
     return self.normalizescores(mindistance, smallIsBetter=True)
+
+  def inboundlinkscore(self, rows):
+    uniqueurls = set([row[0] for row in rows])  # XXX: why is this needed?
+    inboundcount = dict([(u, self.con.execute(
+      'select count(*) from link where toid = %d' % u).fetchone()[0])
+      for u in uniqueurls])
+    return self.normalizescores(inboundcount, smallIsBetter=False)
 
 
 if __name__ == '__main__':
