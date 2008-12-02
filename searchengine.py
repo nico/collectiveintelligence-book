@@ -193,10 +193,11 @@ class searcher:
   def getscoredlist(self, rows, wordids):
     totalscores = dict([(row[0], 0) for row in rows])
 
-    weights = [(1.0, self.frequencyscore(rows)),
-        (1.0, self.locationscore(rows))]
+    weightedScores = [(1.0, self.frequencyscore(rows)),
+        (1.0, self.locationscore(rows)),
+        (3.0, self.locationscore(rows))]
 
-    for weight, scores in weights:
+    for weight, scores in weightedScores:
       for url in totalscores:
         totalscores[url] += weight * scores[url]
 
@@ -217,6 +218,8 @@ class searcher:
   # Scoring functions
 
   def normalizescores(self, scores, smallIsBetter=False):
+    if not scores: return scores
+
     vsmall = 0.00001  # smoothen out division by zero
     if smallIsBetter:
       minscore = min(scores.values())
@@ -240,6 +243,16 @@ class searcher:
       loc = sum(row[1:])
       if loc < locations[row[0]]: locations[row[0]] = loc
     return self.normalizescores(locations, smallIsBetter=True)
+
+  def distancescore(self, rows):
+    # only one word in query?
+    if len(rows[0]) <= 2: return dict([(row[0], 1.0) for row in rows])
+
+    mindistance = dict([(row[0], 1000000) for row in rows])
+    for row in rows:
+      dist = sum([abs(row[i] - row[i - 1]) for i in range(2, len(row))])
+      if dist < mindistance[rows[0]]: mindistance[rows[0]] = dist
+    return self.normalizescores(mindistance, smallIsBetter=True)
 
 
 if __name__ == '__main__':
