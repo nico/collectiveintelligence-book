@@ -245,6 +245,7 @@ class searcher:
         (0.0, self.locationscore(rows)),
         (0.0, self.distancescore(rows)),
         (1.0, self.inboundlinkscore(rows)),
+        (0.0, self.pagerankscore(rows)),
         ]
 
     for weight, scores in weightedScores:
@@ -308,6 +309,11 @@ class searcher:
       'select count(*) from link where toid = %d' % u).fetchone()[0])
       for u in uniqueurls])
     return self.normalizescores(inboundcount, smallIsBetter=False)
+
+  def pagerankscore(self, rows):
+    pageranks = dict([(row[0], self.con.execute('select score from pagerank '
+      + 'where urlid = %d' % row[0]).fetchone()[0]) for row in rows])
+    return self.normalizescores(pageranks, smallIsBetter=False)
 
 
 if __name__ == '__main__':
