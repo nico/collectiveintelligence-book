@@ -10,6 +10,9 @@ from BeautifulSoup import BeautifulSoup
 ignorewords = set(['the', 'of', 'to', 'and', 'a', 'in', 'is', 'it'])
 
 
+# XXX: the root page (amnoid.de) is indexed twice for some reason (e.g.
+#   select * from links where toid = 2;
+# shows the link 1->2 two times.
 class crawler:
 
   def __init__(self, dbname):
@@ -143,6 +146,37 @@ class crawler:
     self.con.execute('create index urlfromidx on link(fromid)')
     self.con.execute('create index urltoidx on link(toid)')
     self.dbcommit()
+
+  def calculatepagerank(self, iterations=20):
+    self.con.execute('drop table if exists pagerank')
+    self.con.execute('create table pagerank(urlid primary key, score)')
+
+    # initialize all pageranks with 1.0 (actual value does not matter)
+    self.con.execute('insert into pagerank select rowid, 1.0 from urllist')
+    self.dbcommit()
+
+    for i in range(iterations):
+      print 'Iteration', i
+      for urlid, in self.con.execute('select rowid from urllist'):
+        pr = 0.15
+
+        # Loop through all pages that link to this one
+        for linker, in self.con.execute(
+            'select distinct fromid from link where toid = %d' % urlid):
+          # Get pagerank of linker
+          linkingrank = self.con.execute('select score from pagerank '
+              + 'where urlid = %d' % linker).fetchone()[0]
+
+          # Get total number of links on page 'linker'
+          linkingcount = self.con.execute('select count(*) '
+              + 'from link where fromid = %d' % linker).fetchone()[0]
+
+          pr += 0.85 * (linkingrank / linkingcount)
+
+        # Store pagerank
+        self.con.execute(
+            'update pagerank set score = %f where urlid = %d' % (pr, urlid))
+      self.dbcommit()
 
 
 class searcher:
@@ -284,6 +318,7 @@ if __name__ == '__main__':
 
   if True:
     crawl.crawl(['http://amnoid.de/'], depth=3)
+    crawl.calculatepagerank()
 
   s = searcher('searchindex.db')
   print s.query('ddsview is great')
