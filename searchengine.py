@@ -147,6 +147,9 @@ class crawler:
     self.con.execute('create index urltoidx on link(toid)')
     self.dbcommit()
 
+  # XXX: If a page with a highish pagerank links 16 other pages, and one
+  # of those links to just one page C, then C has a higher pagerank than
+  # the original high-pr page. Weird.
   def calculatepagerank(self, iterations=20):
     self.con.execute('drop table if exists pagerank')
     self.con.execute('create table pagerank(urlid primary key, score)')
@@ -241,11 +244,12 @@ class searcher:
     totalscores = dict([(row[0], 0) for row in rows])
     if not rows: return totalscores
 
-    weightedScores = [(0.0, self.frequencyscore(rows)),
-        (0.0, self.locationscore(rows)),
-        (0.0, self.distancescore(rows)),
+    weightedScores = [(2.0, self.frequencyscore(rows)),
+        (1.0, self.locationscore(rows)),
+        (1.0, self.distancescore(rows)),
         (1.0, self.inboundlinkscore(rows)),
-        (0.0, self.pagerankscore(rows)),
+        (1.0, self.pagerankscore(rows)),
+        (1.0, self.linktextscore(rows, wordids)),
         ]
 
     for weight, scores in weightedScores:
@@ -314,6 +318,19 @@ class searcher:
     pageranks = dict([(row[0], self.con.execute('select score from pagerank '
       + 'where urlid = %d' % row[0]).fetchone()[0]) for row in rows])
     return self.normalizescores(pageranks, smallIsBetter=False)
+
+  def linktextscore(self, rows, wordids):
+    linkscores = dict([(row[0], 0) for row in rows])
+    for wordid in wordids:
+      cur = self.con.execute(
+          'select link.fromid, link.toid from linkwords, link '
+        + 'where wordid = %d and linkwords.linkid = link.rowid' % wordid)
+      for fromid, toid in cur:
+        if toid in linkscores:
+          rank = self.con.execute('select score from pagerank where urlid = %d'
+              % fromid).fetchone()[0]
+          linkscores[toid] += rank
+    return self.normalizescores(linkscores, smallIsBetter=False)
 
 
 if __name__ == '__main__':
