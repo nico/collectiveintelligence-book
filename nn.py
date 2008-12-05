@@ -67,6 +67,18 @@ class searchnet:
         self.setstrength(hiddenid, urlid, 1, 0.1)
       self.con.commit()
 
+  def getallhiddenids(self, wordids, urlids):
+    """Returns all hidden nodes connected to either wordids or urlids."""
+    l1 = set()
+    for wordid in wordids:
+      cur = self.con.execute(
+          'select toid from wordhidden where fromid = %d' % wordid)
+      for row in cur: l1.add(row[0])
+    for urlid in urlids:
+      cur = self.con.execute(
+          'select fromid from hiddenurl where toid = %d' % urlid)
+      for row in cur: l1.add(row[0])
+    return list(l1)
 
 if __name__ == '__main__':
   net = searchnet('nn.db')
@@ -79,3 +91,4 @@ if __name__ == '__main__':
   for c in net.con.execute('select * from hiddennode'): print c
   for c in net.con.execute('select * from wordhidden'): print c
   for c in net.con.execute('select * from hiddenurl'): print c
+  print net.getallhiddenids([101], [202, 203])
