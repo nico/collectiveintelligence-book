@@ -6,6 +6,8 @@ import urlparse
 from pysqlite2 import dbapi2 as sqlite
 from BeautifulSoup import BeautifulSoup
 
+import nn
+net = nn.searchnet('nn.db')
 
 ignorewords = set(['the', 'of', 'to', 'and', 'a', 'in', 'is', 'it'])
 
@@ -250,6 +252,7 @@ class searcher:
         (1.0, self.inboundlinkscore(rows)),
         (1.0, self.pagerankscore(rows)),
         (1.0, self.linktextscore(rows, wordids)),
+        (0.0, self.nnscore(rows, wordids)),
         ]
 
     for weight, scores in weightedScores:
@@ -331,6 +334,15 @@ class searcher:
               % fromid).fetchone()[0]
           linkscores[toid] += rank
     return self.normalizescores(linkscores, smallIsBetter=False)
+
+  def nnscore(self, rows, wordids):
+    # Get unique url ids as ordered list
+    urlids = list(set([row[0] for row in rows]))
+    #urlids = list(set([row[0] for row in rows]))
+    #assert urlids == sorted(urlids)
+    nnres = net.getresult(wordids, urlids)
+    scores = dict([(urlids[i], nnres[i]) for i in range(len(urlids))])
+    return self.normalizescores(scores, smallIsBetter=False)
 
 
 if __name__ == '__main__':
