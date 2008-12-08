@@ -1,6 +1,12 @@
 from math import tanh
 import sqlite3 as sqlite  # use the bundled mysq   l
 
+
+def dtanh(y):
+  #return 1.0 - y*y  # XXX: this is wrong?
+  return 1.0 / (1.0 + y*y)
+
+
 class searchnet:
   def __init__(self, dbname):
     self.con = sqlite.connect(dbname)
@@ -37,7 +43,7 @@ class searchnet:
       self.con.execute('insert into %s (fromid, toid, strength) ' % table
           + 'values (%d, %d, %f)' % (fromid, toid, strength))
     else:
-      self.con.execute('update %s set strength %s where rowid = %d'
+      self.con.execute('update %s set strength = %f where rowid = %d'
           % (table, strength, res[0]))
 
   def generatehiddennode(self, wordids, urls):
@@ -123,18 +129,77 @@ class searchnet:
     self.setupnetwork(wordids, urlids)
     return self.feedforward()
 
+  def backpropagate(self, targets, N=0.5):
+    """Can be called after feedforward() to tell the net about a desired
+    result for the last query."""
+    # calculate output errors
+    output_deltas = [0.0] * len(self.urlids)
+    for k in range(len(self.urlids)):
+      error = targets[k] - self.ao[k]
+      output_deltas[k] = dtanh(self.ao[k]) * error
+
+    # calculate errors in hidden layer
+    hidden_deltas = [0.0] * len(self.hiddenids)
+    for j in range(len(self.hiddenids)):
+      error = 0.0
+      for k in range(len(self.urlids)):
+        error += output_deltas[k] * self.wo[j][k]
+      hidden_deltas[j] = dtanh(self.ah[j]) * error
+
+    # update output weights
+    for j in range(len(self.hiddenids)):
+      for k in range(len(self.urlids)):
+        change = output_deltas[k] * self.ah[j]
+        self.wo[j][k] += N*change
+
+    # update input weights
+    for i in range(len(self.wordids)):
+      for j in range(len(self.hiddenids)):
+        change = hidden_deltas[j] * self.ai[i]
+        self.wi[i][j] += N*change
+
+  def trainquery(self, wordids, urlids, selectedurl):
+    """Trains the net that selectedurl is the preferred answer for a query
+    for wordids that shows results urlids."""
+    # Make sure hidden node for this query exists
+    self.generatehiddennode(wordids, urlids)
+
+    self.setupnetwork(wordids, urlids)
+    self.feedforward()
+    targets = [0.0] * len(urlids)
+    targets[urlids.index(selectedurl)] = 1.0
+    error = self.backpropagate(targets)
+    self.updatedatabase()
+
+  def updatedatabase(self):
+    """Stores the results of a backpropagation back in the database."""
+    for i in range(len(self.wordids)):
+      for j in range(len(self.hiddenids)):
+        self.setstrength(self.wordids[i], self.hiddenids[j], 0, self.wi[i][j])
+    for j in range(len(self.hiddenids)):
+      for k in range(len(self.urlids)):
+        self.setstrength(self.hiddenids[j], self.urlids[k], 1, self.wo[j][k])
+    self.con.commit()
+
 
 if __name__ == '__main__':
   net = searchnet('nn.db')
   net.maketables()
 
-  words = [101, 102]
-  urls = [201, 202, 203]
-  net.generatehiddennode(words, urls)
+  wWorld, wBank, wRiver = 101, 102, 103
+  uWorldBank, uRiver, uEarth = 201, 202, 203
+  words = [wWorld, wBank]
+  urls = [uWorldBank, uRiver, uEarth]
+
+  for i in range(30):
+    net.trainquery([wWorld, wBank], urls, uWorldBank)
+    net.trainquery([wRiver, wBank], urls, uRiver)
+    net.trainquery([wWorld], urls, uEarth)
 
   for c in net.con.execute('select * from hiddennode'): print c
   for c in net.con.execute('select * from wordhidden'): print c
   for c in net.con.execute('select * from hiddenurl'): print c
-  print net.getallhiddenids([101], [202, 203])
 
-  print net.getresult([101], [201, 203])
+  print net.getresult([wWorld, wBank], urls)
+  print net.getresult([wRiver, wBank], urls)
+  print net.getresult([wBank], urls)
