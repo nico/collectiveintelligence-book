@@ -33,8 +33,8 @@ def serve_search(environ, start_response):
         for score, url in s.query(query_words)])
       results = results.encode('utf-8')
 
+  # Note: this also returns html for favicon queries.
   start_response('200 OK',[('Content-type','text/html')])
-  print template % locals()
   return [template % locals()]
 
 

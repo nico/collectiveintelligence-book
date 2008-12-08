@@ -252,7 +252,7 @@ class searcher:
         (1.0, self.inboundlinkscore(rows)),
         (1.0, self.pagerankscore(rows)),
         (1.0, self.linktextscore(rows, wordids)),
-        (0.0, self.nnscore(rows, wordids)),
+        (0.0, self.nnscore(rows, wordids)),  # not trained yet...
         ]
 
     for weight, scores in weightedScores:
