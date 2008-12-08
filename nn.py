@@ -21,8 +21,9 @@ class searchnet:
     """Gets a connection strength from the db, returns a default value if
     no value is found in the db."""
     table = self.tablename(layer)
-    res = self.con.execute('select strength from %s where fromid = %d' %
-        (table, fromid, toid)).fetchone()
+    res = self.con.execute(
+        'select strength from %s where fromid = %d and toid = %d'
+        % (table, fromid, toid)).fetchone()
     if res == None:
       return [-0.2, 0][layer]
     return res[0]
@@ -80,6 +81,49 @@ class searchnet:
       for row in cur: l1.add(row[0])
     return list(l1)
 
+  def setupnetwork(self, wordids, urlids):
+    # XXX: it's weird that this assigns to member variables
+    # value lists
+    self.wordids = wordids
+    self.hiddenids = self.getallhiddenids(wordids, urlids)
+    self.urlids = urlids
+
+    # node outputs
+    self.ai = [1.0] * len(self.wordids)
+    self.ah = [1.0] * len(self.hiddenids)
+    self.ao = [1.0] * len(self.urlids)
+
+    # create weight matrix
+    self.wi = [[self.getstrength(wordid, hiddenid, 0)
+      for hiddenid in self.hiddenids]
+      for wordid in wordids]
+    self.wo = [[self.getstrength(hiddenid, urlid, 1)
+      for urlid in self.urlids]
+      for hiddenid in self.hiddenids]
+
+  def feedforward(self):
+    for i in range(len(self.wordids)):
+      self.ai[i] = 1.0
+
+    for j in range(len(self.hiddenids)):
+      sum = 0.0
+      for i in range(len(self.wordids)):
+        sum += self.ai[i] * self.wi[i][j]
+      self.ah[j] = tanh(sum)
+
+    for k in range(len(self.urlids)):
+      sum = 0.0
+      for j in range(len(self.hiddenids)):
+        sum += self.ah[j] * self.wo[j][k]
+      self.ao[k] = tanh(sum)
+
+    return self.ao[:]
+
+  def getresult(self, wordids, urlids):
+    self.setupnetwork(wordids, urlids)
+    return self.feedforward()
+
+
 if __name__ == '__main__':
   net = searchnet('nn.db')
   net.maketables()
@@ -92,3 +136,5 @@ if __name__ == '__main__':
   for c in net.con.execute('select * from wordhidden'): print c
   for c in net.con.execute('select * from hiddenurl'): print c
   print net.getallhiddenids([101], [202, 203])
+
+  print net.getresult([101], [201, 203])
