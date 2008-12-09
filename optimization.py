@@ -62,6 +62,31 @@ def randomoptimize(domain, costf):
       bestr = r
   return r
 
+
+def hillclimbopt(domain, costf):
+  sol = [random.randint(domain[j][0], domain[j][1]) for j in range(len(domain))]
+
+  while True:
+    neighbors = []
+    for j in range(len(domain)):
+      if sol[j] > domain[j][0]:
+        neighbors.append(sol[0:j] + [sol[j] - 1] + sol[j + 1:])
+      if sol[j] < domain[j][1]:
+        neighbors.append(sol[0:j] + [sol[j] + 1] + sol[j + 1:])
+
+    current = costf(sol)
+    best = current
+    for j in range(len(neighbors)):
+      cost = costf(neighbors[j])
+      if cost < best:
+        best = cost
+        sol = neighbors[j]
+
+    if best == current:
+      break
+  return sol
+
+
 if __name__ == '__main__':
   people = [
       ('Seymour', 'BOS'),
@@ -80,9 +105,17 @@ if __name__ == '__main__':
     origin, dest, depart, arrive, price = line.strip().split(',')
     flights[(origin, dest)].append( (depart, arrive, int(price)) )
 
+  # 10 flights in each direction
+  #for f in flights:
+    #print f, len(flights[f])
+
   f = costfunc(flights, destination)
   domain = [(0, 8)] * (len(people) * 2)
 
   r = randomoptimize(domain, f)
+  printschedule(r, destination)
+  print f(r)
+
+  r = hillclimbopt(domain, f)
   printschedule(r, destination)
   print f(r)
