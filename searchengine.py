@@ -7,7 +7,7 @@ from pysqlite2 import dbapi2 as sqlite
 from BeautifulSoup import BeautifulSoup
 
 import nn
-net = nn.searchnet('nn.db')
+net = nn.searchnet('nn.db')  # XXX: somehow train this from user clicks
 
 ignorewords = set(['the', 'of', 'to', 'and', 'a', 'in', 'is', 'it'])
 
