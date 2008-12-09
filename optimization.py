@@ -30,8 +30,8 @@ def schedulecost(sol, flights, dest):
 
     totalprice += outbound[2] + returnf[2]
 
-    latestarrival = min(latestarrival, getminutes(outbound[1]))
-    earliestdep = max(latestarrival, getminutes(returnf[0]))
+    latestarrival = max(latestarrival, getminutes(outbound[1]))
+    earliestdep = min(latestarrival, getminutes(returnf[0]))
 
   # Every person must wait until the last person arrives.
   # They must also arrive when the first flight leaves
