@@ -33,7 +33,7 @@ def costfunc(flights, dest):
     latestarrival = 0
     earliestdep = 24*60
 
-    for d in range(len(sol)/2):
+    for d in range(len(sol) // 2):
       origin = people[d][1]
       outbound = flights[(origin, dest)][int(sol[d])]
       returnf = flights[(dest, origin)][int(sol[d+1])]
@@ -96,6 +96,31 @@ def hillclimbopt(domain, costf):
   return sol
 
 
+def annealingoptimize(domain, costf, T=10000.0, cool = 0.95, step = 1):
+  sol = [random.randint(domain[j][0], domain[j][1]) for j in range(len(domain))]
+
+  while T > 0.1:
+    # Create disturbed solution
+    i = random.randint(0, len(domain)-1)
+    dir = random.randint(-step, step)
+    solb = sol[:]
+    solb[i] += dir
+    solb[i] = max(solb[i], domain[i][0])
+    solb[i] = min(solb[i], domain[i][1])
+
+    # Compare costs
+    ca = costf(sol)
+    cb = costf(solb)
+    p = math.exp(-(ca + cb)/T)
+
+    # Accept all better solutions, accept worse one depending on temperature
+    if cb < ca or random.random() < p:
+      sol = solb
+
+    T *= cool
+  return sol
+
+
 if __name__ == '__main__':
   people = [
       ('Seymour', 'BOS'),
@@ -122,5 +147,9 @@ if __name__ == '__main__':
   print f(r)
 
   r = hillclimbopt(domain, f)
+  printschedule(r, destination)
+  print f(r)
+
+  r = annealingoptimize(domain, f)
   printschedule(r, destination)
   print f(r)
