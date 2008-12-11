@@ -96,7 +96,7 @@ def hillclimbopt(domain, costf):
   return sol
 
 
-def annealingoptimize(domain, costf, T=10000.0, cool = 0.95, step = 1):
+def annealingoptimize(domain, costf, T=10000.0, cool=0.95, step=1):
   sol = [random.randint(domain[j][0], domain[j][1]) for j in range(len(domain))]
 
   while T > 0.1:
@@ -119,6 +119,55 @@ def annealingoptimize(domain, costf, T=10000.0, cool = 0.95, step = 1):
 
     T *= cool
   return sol
+
+
+def geneticoptimize(domain, costf, popsize=50, step=1,
+    mutprob=0.2, elite=0.2, maxiter=100):
+  def mutate(vec):
+    assert len(domain) == len(vec)
+    i = random.randint(0, len(domain)-1)
+    # XXX: broken.
+    # 1. step not in range check
+    # 2. prob and bounds check mixed up
+    if random.random() < 0.5 and vec[i] > domain[i][0]:
+      return vec[0:i] + [vec[i] - step] + vec[i+1:]
+    elif vec[i] < domain[i][1]:
+      return vec[0:i] + [vec[i] + step] + vec[i+1:]
+    return vec
+
+  def crossover(r1, r2):
+    i = random.randint(1, len(domain)-2)
+    return r1[0:i] + r2[i:]
+
+  # Starting population
+  pop = [[random.randint(domain[j][0],domain[j][1])
+    for j in range(len(domain))]
+    for i in range(popsize)]
+
+  numWinners = int(elite*popsize)
+  for i in range(maxiter):
+    ranked = sorted(pop, key=costf)
+
+    # add winners
+    pop = ranked[0:numWinners]
+
+    # add mutated and bred forms of the winners
+    while len(pop) < popsize:
+      if random.random() < mutprob:
+        newGuy = mutate(ranked[random.randint(0, numWinners-1)])
+      else:
+        newGuy = crossover(ranked[random.randint(0, numWinners-1)],
+          ranked[random.randint(0, numWinners-1)])
+      if not newGuy:
+        print i, numWinners, len(pop)
+        raise "omg"
+      pop.append(newGuy)
+
+    # Print current best score
+    print costf(ranked[0])
+
+  # Return current best guy
+  return ranked[0]
 
 
 if __name__ == '__main__':
@@ -151,5 +200,9 @@ if __name__ == '__main__':
   print f(r)
 
   r = annealingoptimize(domain, f)
+  printschedule(r, destination)
+  print f(r)
+
+  r = geneticoptimize(domain, f)
   printschedule(r, destination)
   print f(r)
