@@ -13,7 +13,7 @@ def getkayaksession():
   return sid
 
 
-def getflightsearch(sid, origin, destination, depart_date):
+def flightsearch(sid, origin, destination, depart_date):
 
   url = 'http://www.kayak.com/s/apisearch?basicmode=true&oneway=y'
   url += '&origin=%s&destination=%s' % (origin, destination)
@@ -60,3 +60,31 @@ def flightsearchresults(sid, searchid):
   return zip([p.firstChild.data.split(' ')[1] for p in departures],
              [p.firstChild.data.split(' ')[1] for p in arrivals],
              [parseprice(p.firstChild.data) for p in prices])
+
+
+def createschedule(people, dest, dep, ret):
+  sid = getkayaksession()
+  flights = {}
+
+  for p in people:
+    name, origin = p
+
+    # outbound flight
+    searchid = flightsearch(sid, origin, dest, dep)
+    flights[(origin, dest)] = flightsearchresults(sid, searchid)
+
+    # return flight
+    searchid = flightsearch(sid, dest, origin, ret)
+    flights[(origin, dest)] = flightsearchresults(sid, searchid)
+
+  return flights
+
+
+if __name__ == '__main__':
+  import optimization
+  f = createschedule([('Nico', 'SFO'), ('Kerstin', 'SFO')], 'LGA',
+      dep='12/30/2008', ret='1/2/2009')
+
+  domain = [(0, 30)] * len(f)
+  s = optimization.geneticoptimize(domain, optimization.costfunc(f, 'LGA'))
+  optimization.printschedule(s, 'LGA')
