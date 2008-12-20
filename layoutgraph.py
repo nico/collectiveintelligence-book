@@ -19,10 +19,13 @@ Links=[('Augustus', 'Willy'),
        ('Miranda', 'Joe')]
 
 
+def solutiontodict(v, people):
+  return dict([(people[i], (v[i*2], v[i*2 + 1])) for i in range(len(people))])
+
 def makecost(people, links):
   def crosscount(v):
     """Returns number of crossing lines."""
-    loc = dict([(people[i], (v[i*2], v[i*2 + 1])) for i in range(len(people))])
+    loc = solutiontodict(v, people)
     count = 0
 
     # O(n^2) - don't use with large (>= 10000 links) input!
