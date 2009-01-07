@@ -44,17 +44,27 @@ def makecost(people, links):
   def crosscount(v):
     """Returns number of crossing lines."""
     loc = solutiontodict(v, people)
-    count = 0
+    cost = 0
 
+    # Count line crossings
     # O(n^2) - don't use with large (>= 10000 links) input!
     for i in range(len(links)):
       for j in range(i+1, len(links)):
         l1 = loc[links[i][0]], loc[links[i][1]]
         l2 = loc[links[j][0]], loc[links[j][1]]
         if testintersect(l1, l2):
-          count += 1
+          cost += 1
 
-    return count
+    # Distribute people evenly by assigning a cost to near people
+    for i in range(len(people)):
+      for j in range(i+1, len(people)):
+        (x1, y1), (x2, y2) = loc[people[i]], loc[people[j]]
+        dist = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+        if dist < 50:
+          cost += 1.0 - dist/50.0
+
+    print cost
+    return cost
   return crosscount
 
 
