@@ -22,6 +22,24 @@ Links=[('Augustus', 'Willy'),
 def solutiontodict(v, people):
   return dict([(people[i], (v[i*2], v[i*2 + 1])) for i in range(len(people))])
 
+
+def testintersect(l1, l2):
+  """Returns if two lines intersect. Parallel lines count as intersection if
+  they overlap in more than one point. Lines touching at their end points do
+  not count as intersection."""
+  (x1, y1), (x2, y2) = l1
+  (x3, y3), (x4, y4) = l2
+
+  den = (y4 - y3)*(x2 - x1) - (x4 - x3)*(y2 - y1)
+
+  # XXX: if den is 0, then lines are parallel (possibly identical)
+  if den == 0: return False
+
+  ua = ((x4 - x3)*(y1 - y3) - (y4 - y3)*(x1 - x3)) / float(den)
+  ub = ((x2 - x1)*(y1 - y3) - (y2 - y1)*(x1 - x3)) / float(den)
+  return 0 < ua < 1 and 0 < ub < 1
+
+
 def makecost(people, links):
   def crosscount(v):
     """Returns number of crossing lines."""
@@ -31,20 +49,11 @@ def makecost(people, links):
     # O(n^2) - don't use with large (>= 10000 links) input!
     for i in range(len(links)):
       for j in range(i+1, len(links)):
-
-        (x1, y1), (x2, y2) = loc[links[i][0]], loc[links[i][1]]  # line 1
-        (x3, y3), (x4, y4) = loc[links[j][0]], loc[links[j][1]]  # line 2
-
-        den = (y4 - y3)*(x2 - x1) - (x4 - x3)*(y2 - y1)
-
-        # if den is 0, then lines are parallel (possibly identical)
-        if den == 0: continue
-
-        ua = ((x4 - x3)*(y1 - y2) - (y4 - y3)*(x1 - x3)) / float(den)
-        ub = ((x2 - x1)*(y1 - y3) - (y2 - y1)*(x1 - x3)) / float(den)
-
-        if 0 < ua < 1 and 0 < ub < 1:
+        l1 = loc[links[i][0]], loc[links[i][1]]
+        l2 = loc[links[j][0]], loc[links[j][1]]
+        if testintersect(l1, l2):
           count += 1
+
     return count
   return crosscount
 
