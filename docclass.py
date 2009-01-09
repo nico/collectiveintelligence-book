@@ -40,3 +40,9 @@ class classifier(object):
 
   def categories(self):
     return self.cc.keys()
+
+  def train(self, item, cat):
+    features = self.getfeatures(item)
+    for f in features:
+      self.incf(f, cat)
+    self.incc(cat)
