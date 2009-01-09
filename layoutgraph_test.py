@@ -50,12 +50,11 @@ class TestinterceptTest(unittest.TestCase):
     self.assertFalse(layoutgraph.testintersect(l1, l2))
 
 
-class MakecostTest(unittest.TestCase):
+class VecAngleTest(unittest.TestCase):
 
-  def test1(self):
-    f = layoutgraph.makecost(layoutgraph.People, layoutgraph.Links)
-    self.assertEquals(3, f([141, 10,  171, 143,  67, 296,  187, 164,
-      370, 21,  331, 39,  124, 166,  354, 307]))
+  def testAngle(self):
+    a = layoutgraph.vec_angle( (10, 5), (5, 5), (5, 10) )
+    self.assertAlmostEquals(90.0, a)
 
 
 if __name__ == '__main__':

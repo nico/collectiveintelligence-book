@@ -40,9 +40,26 @@ def testintersect(l1, l2):
   return 0 < ua < 1 and 0 < ub < 1
 
 
+def cross(p1, p2):
+  return p1[0]*p2[1] - p1[1]*p2[0]
+
+
+def vec_length(p):
+  return math.sqrt(p[0]*p[0] + p[1]*p[1])
+
+
+def vec_angle(p1, p0, p2):
+  d1 = (p1[0] - p0[0], p1[1] - p0[1])
+  d2 = (p2[0] - p0[0], p2[1] - p0[1])
+  c = cross(d1, d2)
+  a = math.asin(c/vec_length(d1)/vec_length(d2))
+  return a / math.pi * 180
+
+
 def makecost(people, links):
-  def crosscount(v):
-    """Returns number of crossing lines."""
+  def crosscost(v):
+    """Returns a cost based on line crossing count, people distance, and
+    line angle."""
     loc = solutiontodict(v, people)
     cost = 0
 
@@ -52,8 +69,28 @@ def makecost(people, links):
       for j in range(i+1, len(links)):
         l1 = loc[links[i][0]], loc[links[i][1]]
         l2 = loc[links[j][0]], loc[links[j][1]]
+
         if testintersect(l1, l2):
           cost += 1
+
+    # Assign a cost to small angles
+    for i in range(len(people)):
+      points = []
+      for j in range(len(links)):
+        if links[j][0] == people[i]:
+          points.append(links[j][1])
+        elif links[j][1] == people[i]:
+          points.append(links[j][0])
+        else: continue
+
+      p0 = loc[people[i]]
+      for j in range(len(points)):
+        for k in range(j+1, len(points)):
+          p1 = loc[points[j]]
+          p2 = loc[points[k]]
+          angle = vec_angle(p1, p0, p2)
+          if angle < 30:
+            cost += 0.4*(1.0 - angle/30.0)
 
     # Distribute people evenly by assigning a cost to near people
     for i in range(len(people)):
@@ -65,7 +102,7 @@ def makecost(people, links):
 
     print cost
     return cost
-  return crosscount
+  return crosscost
 
 
 if __name__ == '__main__':
