@@ -1,5 +1,6 @@
-import math
 import collections
+import math
+import operator
 import re
 
 
@@ -47,6 +48,11 @@ class classifier(object):
       self.incf(f, cat)
     self.incc(cat)
 
+  def cprob(self, cat):
+    """Returns P(cat)."""
+    if self.totalcount() == 0: return 0.0
+    return self.catcount(cat) / self.totalcount()
+
   def fprob(self, f, cat):
     """Returns P(f | cat), i.e. chance that a document in category cat contains
     the given feature."""
@@ -63,6 +69,24 @@ class classifier(object):
 
     weightedp = ((weight*ap) + (totals*basicprob))/(weight + totals)
     return weightedp
+
+
+class naivebayes(classifier):
+
+  def docprob(self, doc, cat):
+    """Returns P(doc | cat), assuming all words in doc are independent (which
+    is not true, hence this does not really return a probability. The result is
+    still useful, though)."""
+    features = self.getfeatures(doc)
+    probs = [self.weightedprob(f, cat, self.fprob) for f in features]
+    return reduce(operator.mul, probs, 1.0)
+
+  def prob(self, cat, doc):
+    """Returns P(cat | doc), with the same caveats as listed for docprob().
+    Also omits the division by P(doc), which would be required by Bayes's
+    Theorem -- we don't care about that term."""
+    # XXX: work out (on paper) what this does in terms of catcount etc
+    return self.docprob(doc, cat) * self.cprob(cat)
 
 
 def sampletrain(cl):
