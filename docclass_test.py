@@ -19,11 +19,23 @@ class ClassifierTest(unittest.TestCase):
 
 class NaivebayesTest(unittest.TestCase):
 
-  def testBasic(self):
+  def testProb(self):
     cl = docclass.naivebayes(docclass.getwords)
     docclass.sampletrain(cl)
     self.assertAlmostEquals(0.15624999, cl.prob('good', 'quick rabbit'))
     self.assertAlmostEquals(0.05, cl.prob('bad', 'quick rabbit'))
+
+  def testClassify(self):
+    cl = docclass.naivebayes(docclass.getwords)
+    docclass.sampletrain(cl)
+    self.assertEquals('good', cl.classify('quick rabbit', default='unknown'))
+    self.assertEquals('bad', cl.classify('quick money', default='unknown'))
+
+    cl.setthreshold('bad', 3.0)
+    self.assertEquals('unknown', cl.classify('quick money', default='unknown'))
+
+    for i in range(10): docclass.sampletrain(cl)
+    self.assertEquals('bad', cl.classify('quick money', default='unknown'))
 
 
 if __name__ == '__main__':

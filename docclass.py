@@ -73,6 +73,34 @@ class classifier(object):
 
 class naivebayes(classifier):
 
+  def __init__(self, getfeatures):
+    classifier.__init__(self, getfeatures)  # XXX: use super()?
+    self.thresholds = collections.defaultdict(lambda: 1.0)
+
+  def setthreshold(self, cat, t):
+    self.thresholds[cat] = t
+
+  def getthreshold(self, cat):
+    return self.thresholds[cat]
+
+
+  def classify(self, doc, default=None):
+    probs = {}
+
+    # Find category with highest "probability"
+    max = 0.0
+    for cat in self.categories():
+      probs[cat] = self.prob(cat, doc)
+      if probs[cat] > max:
+        max = probs[cat]
+        best = cat
+
+    # make sure the classifier is sure about what it's saying
+    for cat in probs:
+      if cat == best: continue
+      if probs[cat]*self.getthreshold(best) > probs[best]: return default
+    return best
+
   def docprob(self, doc, cat):
     """Returns P(doc | cat), assuming all words in doc are independent (which
     is not true, hence this does not really return a probability. The result is
