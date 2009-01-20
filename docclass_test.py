@@ -38,5 +38,15 @@ class NaivebayesTest(unittest.TestCase):
     self.assertEquals('bad', cl.classify('quick money', default='unknown'))
 
 
+class FisherclassifierTest(unittest.TestCase):
+
+  def testProb(self):
+    cl = docclass.fisherclassifier(docclass.getwords)
+    docclass.sampletrain(cl)
+    self.assertAlmostEquals(0.57142857, cl.cprob('quick', 'good'))
+    self.assertAlmostEquals(0.78013987, cl.fisherprob('quick rabbit', 'good'))
+    self.assertAlmostEquals(0.35633596, cl.fisherprob('quick rabbit', 'bad'))
+
+
 if __name__ == '__main__':
   unittest.main()

@@ -117,6 +117,34 @@ class naivebayes(classifier):
     return self.docprob(doc, cat) * self.cprob(cat)
 
 
+class fisherclassifier(classifier):
+
+  def cprob(self, f, cat):
+    """As far as I understand, this returns P(cat | f), but with a fancy method
+    to avoid normalization issues?"""
+    clf = self.fprob(f, cat)
+    freqsum = sum([self.fprob(f, c) for c in self.categories()])
+    p = clf/freqsum
+    return p
+
+  def fisherprob(self, doc, cat):
+    features = self.getfeatures(doc)
+    # XXX: If cprob returns P(cat | f), why can I use it with weightedprob?
+    probs = [self.weightedprob(f, cat, self.cprob) for f in features]
+    p = reduce(operator.mul, probs, 1.0)
+
+    fscore = -2*math.log(p)
+    return self.invchi2(fscore, len(features)*2)
+
+  def invchi2(self, chi, df):
+    m = chi / 2.0
+    sum = term = math.exp(-m)
+    for i in range(1, df // 2):
+      term *= m / i
+      sum += term
+    return min(sum, 1.0)
+
+
 def sampletrain(cl):
   cl.train('Nobody owns the water.', 'good')
   cl.train('the quick rabbit jumps fences', 'good')
