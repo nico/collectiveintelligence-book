@@ -119,6 +119,16 @@ class naivebayes(classifier):
 
 class fisherclassifier(classifier):
 
+  def __init__(self, getfeatures):
+    classifier.__init__(self, getfeatures)  # XXX: use super()?
+    self.minimums = collections.defaultdict(int)
+
+  def setmininum(self, cat, min):
+    self.minimums[cat] = min
+
+  def getminimum(self, cat):
+    return self.minimums[cat]
+
   def cprob(self, f, cat):
     """As far as I understand, this returns P(cat | f), but with a fancy method
     to avoid normalization issues?"""
@@ -143,6 +153,16 @@ class fisherclassifier(classifier):
       term *= m / i
       sum += term
     return min(sum, 1.0)
+
+  def classify(self, item, default=None):
+    best = default
+    max = 0.0
+    for c in self.categories():
+      p = self.fisherprob(item, c)
+      if p > self.getminimum(c) and p > max:
+        best = c;
+        max = p
+    return best
 
 
 def sampletrain(cl):

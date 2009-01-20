@@ -47,6 +47,18 @@ class FisherclassifierTest(unittest.TestCase):
     self.assertAlmostEquals(0.78013987, cl.fisherprob('quick rabbit', 'good'))
     self.assertAlmostEquals(0.35633596, cl.fisherprob('quick rabbit', 'bad'))
 
+  def testClassify(self):
+    cl = docclass.fisherclassifier(docclass.getwords)
+    docclass.sampletrain(cl)
+
+    self.assertEquals('good', cl.classify('quick rabbit', default='unknown'))
+    self.assertEquals('bad', cl.classify('quick money', default='unknown'))
+
+    cl.setminimum('bad', 0.8)
+    self.assertEquals('good', cl.classify('quick money', default='unknown'))
+
+    cl.setminimum('bad', 0.4)
+    self.assertEquals('bad', cl.classify('quick money', default='unknown'))
 
 if __name__ == '__main__':
   unittest.main()
