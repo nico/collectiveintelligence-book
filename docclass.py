@@ -123,7 +123,7 @@ class fisherclassifier(classifier):
     classifier.__init__(self, getfeatures)  # XXX: use super()?
     self.minimums = collections.defaultdict(int)
 
-  def setmininum(self, cat, min):
+  def setminimum(self, cat, min):
     self.minimums[cat] = min
 
   def getminimum(self, cat):
