@@ -13,6 +13,7 @@ class ClassifierTest(unittest.TestCase):
 
   def testBasic(self):
     cl = docclass.classifier(docclass.getwords)
+    cl.setdb('test.db')
     cl.train('spam spam spam', 'bad')
     self.assertEquals(1.0, cl.fprob('spam', 'bad'))
 
@@ -21,12 +22,14 @@ class NaivebayesTest(unittest.TestCase):
 
   def testProb(self):
     cl = docclass.naivebayes(docclass.getwords)
+    cl.setdb('test.db')
     docclass.sampletrain(cl)
     self.assertAlmostEquals(0.15624999, cl.prob('good', 'quick rabbit'))
     self.assertAlmostEquals(0.05, cl.prob('bad', 'quick rabbit'))
 
   def testClassify(self):
     cl = docclass.naivebayes(docclass.getwords)
+    cl.setdb('test.db')
     docclass.sampletrain(cl)
     self.assertEquals('good', cl.classify('quick rabbit', default='unknown'))
     self.assertEquals('bad', cl.classify('quick money', default='unknown'))
@@ -42,6 +45,7 @@ class FisherclassifierTest(unittest.TestCase):
 
   def testProb(self):
     cl = docclass.fisherclassifier(docclass.getwords)
+    cl.setdb('test.db')
     docclass.sampletrain(cl)
     self.assertAlmostEquals(0.57142857, cl.cprob('quick', 'good'))
     self.assertAlmostEquals(0.78013987, cl.fisherprob('quick rabbit', 'good'))
@@ -49,6 +53,7 @@ class FisherclassifierTest(unittest.TestCase):
 
   def testClassify(self):
     cl = docclass.fisherclassifier(docclass.getwords)
+    cl.setdb('test.db')
     docclass.sampletrain(cl)
 
     self.assertEquals('good', cl.classify('quick rabbit', default='unknown'))
@@ -59,6 +64,7 @@ class FisherclassifierTest(unittest.TestCase):
 
     cl.setminimum('bad', 0.4)
     self.assertEquals('bad', cl.classify('quick money', default='unknown'))
+
 
 if __name__ == '__main__':
   unittest.main()

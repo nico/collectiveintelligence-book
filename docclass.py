@@ -3,6 +3,8 @@ import math
 import operator
 import re
 
+from pysqlite2 import dbapi2 as sqlite
+
 
 def getwords(doc):
   splitter = re.compile(r'\W*')
@@ -20,27 +22,75 @@ class classifier(object):
     self.cc = collections.defaultdict(int)
     self.getfeatures = getfeatures
 
+  def setdb(self, dbfile):
+    self.con = sqlite.connect(dbfile)
+    self.con.execute('create table if not exists fc(feature, category, count)')
+    self.con.execute('create table if not exists cc(category, count)')
+
+  # Dict-based methods
+  # (XXX: The methods should delegate to a Store object, which could then be
+  # a dict- or db-based class. But this is for fun only, so...)
+
+  #def incf(self, f, cat):
+    #self.fc[f][cat] += 1
+
+  #def incc(self, cat):
+    #self.cc[cat] += 1
+
+  #def fcount(self, f, cat):
+    #if f in self.fc and cat in self.fc[f]:
+      #return float(self.fc[f][cat])
+    #return 0.0
+
+  #def catcount(self, cat):
+    #if cat in self.cc:
+      #return float(self.cc[cat])
+    #return 0.0
+
+  #def totalcount(self):
+    #return sum(self.cc.values())
+
+  #def categories(self):
+    #return self.cc.keys()
+
   def incf(self, f, cat):
-    self.fc[f][cat] += 1
+    count = self.fcount(f, cat)
+    if count == 0:
+      self.con.execute('insert into fc values ("%s", "%s", 1)' % (f, cat))
+    else:
+      self.con.execute(
+          'update fc set count = %d where feature="%s" and category="%s"'
+          % (count + 1, f, cat))
 
   def incc(self, cat):
-    self.cc[cat] += 1
+    count = self.catcount(cat)
+    if count == 0:
+      self.con.execute('insert into cc values ("%s", 1)' % cat)
+    else:
+      self.con.execute(
+          'update cc set count = %d where category="%s"' % (count + 1, cat))
 
   def fcount(self, f, cat):
-    if f in self.fc and cat in self.fc[f]:
-      return float(self.fc[f][cat])
-    return 0.0
+    res = self.con.execute(
+        'select count from fc where feature="%s" and category="%s"'
+        % (f, cat)).fetchone()
+    if not res: return 0.0
+    return float(res[0])
 
   def catcount(self, cat):
-    if cat in self.cc:
-      return float(self.cc[cat])
-    return 0.0
+    res = self.con.execute(
+        'select count from cc where category="%s"' % cat).fetchone()
+    if not res: return 0.0
+    return float(res[0])
 
   def totalcount(self):
-    return sum(self.cc.values())
+    res = self.con.execute('select sum(count) from cc').fetchone()
+    if not res: return 0.0
+    return float(res[0])
 
   def categories(self):
-    return self.cc.keys()
+    cur = self.con.execute('select category from cc')
+    return [d[0] for d in cur]
 
   def train(self, item, cat):
     features = self.getfeatures(item)
