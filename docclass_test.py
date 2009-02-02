@@ -65,6 +65,12 @@ class FisherclassifierTest(unittest.TestCase):
     cl.setminimum('bad', 0.4)
     self.assertEquals('bad', cl.classify('quick money', default='unknown'))
 
+  def testOneCategory(self):
+    cl = docclass.fisherclassifier(docclass.getwords)
+    cl.setdb('test.db')
+    cl.train('hallo hallo', 'greeting')
+    self.assertEquals('greeting', cl.classify('hallo world'))
+
 
 if __name__ == '__main__':
   unittest.main()

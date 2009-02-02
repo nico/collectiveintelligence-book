@@ -183,6 +183,7 @@ class fisherclassifier(classifier):
     """As far as I understand, this returns P(cat | f), but with a fancy method
     to avoid normalization issues?"""
     clf = self.fprob(f, cat)
+    if clf == 0: return 0.0  # else testOneCategory() fails
     freqsum = sum([self.fprob(f, c) for c in self.categories()])
     p = clf/freqsum
     return p
