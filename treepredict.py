@@ -42,7 +42,7 @@ def giniimpurity(rows):
     p1 = float(counts[k1])/total  # XXX: These loops can be written more nicely
     for k2 in counts:
       if k1 == k2: continue
-      p2 = float(counts[k1])/total
+      p2 = float(counts[k2])/total
       imp += p1*p2
   return imp
 
