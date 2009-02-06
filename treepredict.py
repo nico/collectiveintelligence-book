@@ -67,7 +67,7 @@ def buildtree(rows, scorefun=entropy):
   best_sets = None
 
   column_count = len(rows[0]) - 1  # last column is result
-  for col in range(0, column_count):  # XXX: last column is ignored?!
+  for col in range(0, column_count):
     # find different values in this column
     column_values = set([row[col] for row in rows])
 
@@ -119,4 +119,3 @@ if __name__ == '__main__':
 
   tree = buildtree(testdata())
   printtree(tree)
-
