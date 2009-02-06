@@ -24,6 +24,7 @@ class TestdataTest(unittest.TestCase):
          ['google','UK','yes',18,'Basic'],
          ['kiwitobes','France','yes',19,'Basic']])
 
+
 class DividesetTest(unittest.TestCase):
 
   def testIntegerDivide(self):
@@ -57,6 +58,14 @@ class EntropyTest(unittest.TestCase):
 
     s1, s2 = treepredict.divideset(d, 2, 'yes')
     self.assertAlmostEquals(1.2987949, treepredict.entropy(s1))
+
+
+class ClassifyTest(unittest.TestCase):
+
+  def testBasics(self):
+    t = treepredict.buildtree(treepredict.testdata())
+    self.assertEquals(treepredict.classify(['(direct)', 'USA', 'yes', 5], t),
+        {'Basic': 4})
 
 
 if __name__ == '__main__':

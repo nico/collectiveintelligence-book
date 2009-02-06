@@ -104,6 +104,21 @@ def printtree(tree, indent=''):
     printtree(tree.fb, indent + '  ')
 
 
+def classify(observation, tree):
+  if tree.results != None:  # leaf
+    return tree.results
+  else:
+    v = observation[tree.col]
+    branch = None
+    if isinstance(v, int) or isinstance(v, float):
+      if v >= tree.value: branch = tree.tb
+      else: branch = tree.fb
+    else:
+      if v == tree.value: branch = tree.tb
+      else: branch = tree.fb
+    return classify(observation, branch)
+
+
 def testdata():
   def cleanup(s):
     s = s.strip()
@@ -119,3 +134,4 @@ if __name__ == '__main__':
 
   tree = buildtree(testdata())
   printtree(tree)
+  print classify(['(direct)', 'USA', 'yes', 5], tree)
