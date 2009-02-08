@@ -58,6 +58,14 @@ def entropy(rows):
   return ent
 
 
+def variance(rows):
+  if len(rows) == 0: return 0
+  data = [float(row[len(row) - 1]) for row in rows]
+  mean = sum(data) / len(data)
+  variance = sum([(d-mean)**2 for d in data]) / (len(data) - 1)
+  return variance
+
+
 def buildtree(rows, scorefun=entropy):
   if len(rows) == 0: return decisionnode()
   current_score = scorefun(rows)
@@ -119,6 +127,52 @@ def classify(observation, tree):
     return classify(observation, branch)
 
 
+def prune(tree, mingain):
+  # recurse
+  if tree.tb.results == None: prune(tree.tb, mingain)
+  if tree.fb.results == None: prune(tree.fb, mingain)
+
+  # merge leaves (potentionally)
+  if tree.tb.results != None and tree.fb.results != None:
+    tb, fb = [], []
+    for v, c in tree.tb.results.iteritems(): tb += [[v]] * c
+    for v, c in tree.fb.results.iteritems(): fb += [[v]] * c
+
+    p = float(len(tb)) / len(tb + fb)
+    delta = entropy(tb+fb) - p*entropy(tb) - (1-p)*entropy(fb)
+    if delta < mingain:
+      tree.tb, tree.fb = None, None
+      tree.results = uniquecounts(tb + fb)
+
+
+# 'missing data classify'
+def mdclassify(observation, tree):
+  if tree.results != None:  # leaf
+    return tree.results
+  else:
+    v = observation[tree.col]
+    if v == None:
+      tr = mdclassify(observation, tree.tb)
+      fr = mdclassify(observation, tree.fb)
+      tcount = sum(tr.values())
+      fcount = sum(fr.values())
+      tw = float(tcount)/(tcount + fcount)
+      fw = float(fcount)/(tcount + fcount)
+      result = collections.defaultdict(int)
+      for k, v in tr.iteritems(): result[k] += v*tw
+      for k, v in fr.iteritems(): result[k] += v*fw
+      return dict(result)
+    else:
+      branch = None
+      if isinstance(v, int) or isinstance(v, float):
+        if v >= tree.value: branch = tree.tb
+        else: branch = tree.fb
+      else:
+        if v == tree.value: branch = tree.tb
+        else: branch = tree.fb
+      return classify(observation, branch)
+
+
 def testdata():
   def cleanup(s):
     s = s.strip()
@@ -135,3 +189,8 @@ if __name__ == '__main__':
   tree = buildtree(testdata())
   printtree(tree)
   print classify(['(direct)', 'USA', 'yes', 5], tree)
+
+  prune(tree, 0.1)
+  printtree(tree)
+  prune(tree, 1.0)
+  printtree(tree)
