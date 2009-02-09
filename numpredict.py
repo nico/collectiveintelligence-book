@@ -25,6 +25,23 @@ def wineset1():
   return rows
 
 
+def wineset2():
+  rows = []
+  for i in range(300):
+    rating = random.random()*50 + 50
+    age = random.random() * 50
+    aisle = float(random.randint(1, 20))
+    bottlesize = [375.0, 750.0, 1500.0, 3000.0][random.randint(0, 3)]
+    price = wineprice(rating, age) * (random.random()*0.4 + 0.8)
+
+    # XXXP179: "less noise": Not really, text has 0.9*r + 0.2, that's _more_
+    # noise?
+
+    price *= bottlesize / 750
+    rows.append({'input': (rating, age, aisle, bottlesize), 'result': price})
+  return rows
+
+
 euclidean = clusters.euclid_dist
 
 
@@ -93,6 +110,14 @@ def crossvalidate(algfun, data, trials=100, pTest=0.05):
   return error / trials
 
 
+def rescale(data, scale):
+  scaledata = []
+  for row in data:
+    scaled = [scale[i]*row['input'][i] for i in range(len(scale))]
+    scaledata.append({'input':scaled, 'result':row['result']})
+  return scaledata
+
+
 if __name__ == '__main__':
   s = wineset1()
 
@@ -107,3 +132,7 @@ if __name__ == '__main__':
   print crossvalidate(lambda d, v: knnestimate(d, v, k=5), s)
   print crossvalidate(lambda d, v: knnestimate(d, v, k=7), s)
   print crossvalidate(lambda d, v: weightedknn(d, v, k=5), s)
+
+  s = wineset2()
+  print crossvalidate(knnestimate, s)
+  print crossvalidate(knnestimate, rescale(s, [10, 10, 0, 0.5]))
