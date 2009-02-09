@@ -34,19 +34,42 @@ def getdistances(data, vec1):
 
 
 def knnestimate(data, vec1, k=3):
+  return weightedknn(data, vec1, k=k, weightfun=lambda d:1.0)
+
+
+def inverseweight(dist, num=1.0, const=0.1):
+  return num/(dist + const)
+
+
+def subtractweight(dist, const=1.0):
+  # Returns 0 for items with no neighbors within `dist`
+  return max(0, const - dist)
+
+
+def gaussianweight(dist, sigma=10.0):
+  return math.exp(-0.5 * (dist/sigma)**2)
+
+
+def weightedknn(data, vec1, k=3, weightfun=gaussianweight):
   # Compute all n distances, but then only use k. What the hell.
   dlist = getdistances(data, vec1)
 
   avg = 0.0
+  totalweight = 0.0
   for i in range(k):
-    idx = dlist[i][1]
-    avg += data[idx]['result']
-  avg /= k
+    dist, idx = dlist[i]
+    weight = weightfun(dist)
+    avg += weight * data[idx]['result']
+    totalweight += weight
+  avg /= totalweight
   return avg
 
 
 if __name__ == '__main__':
   s = wineset1()
 
-  print knnestimate(s, (95.0, 3.0))
+  print knnestimate(s, (95.0, 3.0), k=1)
+  print knnestimate(s, (95.0, 3.0), k=3)
+  print knnestimate(s, (95.0, 3.0), k=5)
+  print weightedknn(s, (95.0, 3.0), k=3)
   print wineprice(95.0, 3.0)
