@@ -65,6 +65,34 @@ def weightedknn(data, vec1, k=3, weightfun=gaussianweight):
   return avg
 
 
+def partition(l, pred):
+  """Paritions a list into to lists, based on a binary predicate."""
+  flist, tlist = [], []
+  for row in l:
+    (tlist if pred(row) else flist).append(row)
+  return flist, tlist
+
+
+def dividedata(data, pTest=0.05):
+  return partition(data, lambda r: random.random() < pTest)
+
+
+def testalgorithm(algfun, trainset, testset):
+  error = 0.0
+  for row in testset:
+    guess = algfun(trainset, row['input'])
+    error += (row['result'] - guess)**2
+  return error / len(testset)
+
+
+def crossvalidate(algfun, data, trials=100, pTest=0.05):
+  error = 0.0
+  for i in range(trials):
+    trainset, testset = dividedata(data, pTest)
+    error += testalgorithm(algfun, trainset, testset)
+  return error / trials
+
+
 if __name__ == '__main__':
   s = wineset1()
 
@@ -73,3 +101,9 @@ if __name__ == '__main__':
   print knnestimate(s, (95.0, 3.0), k=5)
   print weightedknn(s, (95.0, 3.0), k=3)
   print wineprice(95.0, 3.0)
+
+  print crossvalidate(knnestimate, s)
+  print crossvalidate(lambda d, v: knnestimate(d, v, k=1), s)
+  print crossvalidate(lambda d, v: knnestimate(d, v, k=5), s)
+  print crossvalidate(lambda d, v: knnestimate(d, v, k=7), s)
+  print crossvalidate(lambda d, v: weightedknn(d, v, k=5), s)
