@@ -62,7 +62,11 @@ def variance(rows):
   if len(rows) == 0: return 0
   data = [float(row[len(row) - 1]) for row in rows]
   mean = sum(data) / len(data)
-  variance = sum([(d-mean)**2 for d in data]) / (len(data) - 1)
+
+  # this gives indexoutofbounds in zillow example
+  #variance = sum([(d-mean)**2 for d in data]) / (len(data) - 1)
+
+  variance = sum([(d-mean)**2 for d in data]) / len(data)
   return variance
 
 
