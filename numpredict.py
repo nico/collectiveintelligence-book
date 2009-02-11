@@ -15,9 +15,9 @@ def wineprice(rating, age):
   return max(0, price)
 
 
-def wineset1():
+def wineset1(k=300):
   rows = []
-  for i in range(300):
+  for i in range(k):
     rating = random.random()*50 + 50
     age = random.random() * 50
     price = wineprice(rating, age) * (random.random()*0.4 + 0.8)
@@ -25,9 +25,9 @@ def wineset1():
   return rows
 
 
-def wineset2():
+def wineset2(k=300):
   rows = []
-  for i in range(300):
+  for i in range(k):
     rating = random.random()*50 + 50
     age = random.random() * 50
     aisle = float(random.randint(1, 20))
@@ -39,6 +39,14 @@ def wineset2():
 
     price *= bottlesize / 750
     rows.append({'input': (rating, age, aisle, bottlesize), 'result': price})
+  return rows
+
+
+def wineset3(k=300):
+  rows = wineset1(k)
+  for row in rows:
+    if random.random() < 0.5:
+      row['result'] *= 0.6  # "discount price", to simulate uneven distribution
   return rows
 
 
@@ -91,7 +99,15 @@ def partition(l, pred):
 
 
 def dividedata(data, pTest=0.05):
-  return partition(data, lambda r: random.random() < pTest)
+  # The approach used in the book doesn't has some variation in the size
+  # of the testset (sometimes the test set has 0 elements!), so use a
+  # different approach instead
+  #return partition(data, lambda r: random.random() < pTest)
+  n = len(data)
+  nTest = int(n*pTest)
+  shuffledData = data[:]
+  random.shuffle(shuffledData)
+  return shuffledData[0:n-nTest], shuffledData[n-nTest:n]
 
 
 def testalgorithm(algfun, trainset, testset):
@@ -118,8 +134,16 @@ def rescale(data, scale):
   return scaledata
 
 
+def createcostfunction(algfun, data):
+  def costf(scale):
+    print scale
+    sdata = rescale(data, scale)
+    return crossvalidate(algfun, sdata, trials=100)
+  return costf
+
+
 if __name__ == '__main__':
-  s = wineset1()
+  s = wineset1(50)
 
   print knnestimate(s, (95.0, 3.0), k=1)
   print knnestimate(s, (95.0, 3.0), k=3)
@@ -133,6 +157,19 @@ if __name__ == '__main__':
   print crossvalidate(lambda d, v: knnestimate(d, v, k=7), s)
   print crossvalidate(lambda d, v: weightedknn(d, v, k=5), s)
 
-  s = wineset2()
+  print
+  print 'set 2, not-to-scale parameters (XXX buggy, broken, incomplete)'
+  s = wineset2(50)
   print crossvalidate(knnestimate, s)
   print crossvalidate(knnestimate, rescale(s, [10, 10, 0, 0.5]))
+
+  # automatically figure out rescaling parameters. This runs forever.
+  # And my optimization code might be broken, this recomputes the same
+  # values over and over again. I should cache them. And fix broken stuff. (XXX)
+  #import optimization
+  #print optimization.annealingoptimize([(0, 20)] * 4,
+      #createcostfunction(knnestimate, s), step=2)
+
+  print
+  print 'set 3, uneven distribution'
+  s = wineset3()
