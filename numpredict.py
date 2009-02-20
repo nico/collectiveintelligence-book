@@ -71,7 +71,8 @@ def subtractweight(dist, const=1.0):
   return max(0, const - dist)
 
 
-def gaussianweight(dist, sigma=10.0):
+#def gaussianweight(dist, sigma=10.0):
+def gaussianweight(dist, sigma=5.0):
   return math.exp(-0.5 * (dist/sigma)**2)
 
 
