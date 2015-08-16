@@ -130,10 +130,11 @@ def geneticoptimize(domain, costf, popsize=50, step=1,
     # 1. step not in range check
     # 2. prob and bounds check mixed up
     if random.random() < 0.5 and vec[i] > domain[i][0]:
-      return vec[0:i] + [vec[i] - step] + vec[i+1:]
+      return vec[0:i] + [max(vec[i] - step, domain[i][0])] + vec[i+1:]
     elif vec[i] < domain[i][1]:
-      return vec[0:i] + [vec[i] + step] + vec[i+1:]
-    return vec
+      return vec[0:i] + [min(vec[i] + step, domain[i][1])] + vec[i+1:]
+    elif vec[i] == domain[i][1]:
+      return vec[0:i] + [max(vec[i] - step, domain[i][0])] + vec[i+1:]
 
   def crossover(r1, r2):
     i = random.randint(1, len(domain)-2)
